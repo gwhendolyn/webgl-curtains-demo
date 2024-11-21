@@ -1,0 +1,26 @@
+body {
+    /* make the body fit the viewport */
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+#canvas {
+    /* make the canvas wrapper fit the document */
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+.plane {
+    /* define the size of your plane */
+    width: 80%;
+    height: 80vh;
+    margin: 10vh auto;
+}
+.plane img {
+    display: none;
+ }
+    
