@@ -1,5 +1,4 @@
 import { Curtains, Plane, Vec2 } from "curtainsjs";
-
 window.addEventListener("load", () => {
     const curtains = new Curtains({
         container: "canvas"
@@ -34,5 +33,10 @@ window.addEventListener("load", () => {
     
     plane.onRender(() => {
         plane.uniforms.time.value += 0.01;
+    });
+    window.addEventListener("mousemove", (event) => {
+        var rect = planeElement.getBoundingClientRect();
+        plane.uniforms.mouse.value.x = event.clientX - rect.left;
+        plane.uniforms.mouse.value.y = event.clientY - rect.top ;
     });
 });
