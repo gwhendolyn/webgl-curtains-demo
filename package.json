@@ -1,5 +1,12 @@
 {
   "dependencies": {
     "curtainsjs": "^8.1.6"
+  },
+  "devDependencies": {
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "build": "webpack --config webpack.config.js"
   }
 }

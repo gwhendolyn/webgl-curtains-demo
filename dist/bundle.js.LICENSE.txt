@@ -1,0 +1,28 @@
+/***
+ Here we create our Curtains object
+
+
+ params:
+ @container (HTML element or string, optional): the container HTML element or ID that will hold our canvas. Could be set later if not passed as parameter here
+
+ (WebGL context parameters)
+ @alpha (bool, optional): whether the WebGL context should handle transparency. Default to true.
+ @premultipliedAlpha (bool, optional): whether the WebGL context should handle premultiplied alpha. Default to false.
+ @antialias (bool, optional): whether the WebGL context should use the default antialiasing. When using render targets, WebGL disables antialiasing, so you can safely set this to false to improve the performance. Default to true.
+ @depth (bool, optional): whether the WebGL context should handle depth. Default to true.
+ @failIfMajorPerformanceCaveat (bool, optional): whether the WebGL context creation should fail in case of major performance caveat. Default to true.
+ @preserveDrawingBuffer (bool, optional): whether the WebGL context should preserve the drawing buffer. Default to false.
+ @stencil (bool, optional): whether the WebGL context should handle stencil. Default to false.
+
+ @autoResize (bool, optional): Whether the library should listen to the window resize event and actually resize the scene. Set it to false if you want to handle this by yourself using the resize() method. Default to true.
+ @autoRender (bool, optional): Whether the library should create a request animation frame loop to render the scene. Set it to false if you want to handle this by yourself using the render() method. Default to true.
+ @watchScroll (bool, optional): Whether the library should listen to the window scroll event. Set it to false if you want to handle this by yourself. Default to true.
+
+ @pixelRatio (float, optional): Defines the pixel ratio value. Use it to limit it on init to increase performance. Default to window.devicePixelRatio.
+ @renderingScale (float, optional): Use it to downscale your rendering canvas. May improve performance but will decrease quality. Default to 1 (minimum: 0.25, maximum: 1).
+
+ @production (bool, optional): Whether the library should throw useful console warnings and errors and check shaders and programs compilation status. Default to false.
+
+ returns :
+ @this: our Renderer
+ ***/
