@@ -1,4 +1,4 @@
-import { Curtains, Plane, Vec2 } from "../node_modules/curtainsjs/src/index.mjs";
+import { Curtains, Plane, Vec2 } from "curtainsjs";
 
 window.addEventListener("load", () => {
     const curtains = new Curtains({
