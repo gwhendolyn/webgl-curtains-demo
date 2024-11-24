@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!------#region vertex shaders ------>
+    <!------ vertex shaders ------>
     <script id="simple-vs" type="x-shader/x-vertex">
         precision mediump float;
         // those are the mandatory attributes that the lib sets
@@ -36,24 +36,19 @@
             vVertexPosition = vertexPosition;
         }
     </script>
-    <!--#endregion-->
+    <!------------>
 
-    <!------#region fragment shaders ------>
+    <!------ fragment shaders ------>
     <script id="simple-fs" type="x-shader/x-fragment">
         precision mediump float;
         // get our varyings
         varying vec3 vVertexPosition;
         varying vec2 vTextureCoord;
-        // the uniform we declared inside our javascript
-        uniform float uTime;
+
         // our texture sampler (default name, to use a different name please refer to the documentation)
         uniform sampler2D uSampler0;
         void main() {
-            // get our texture coords from our varying
-            vec2 textureCoord = vTextureCoord;
-    
-            // map our texture with the texture matrix coords
-            gl_FragColor = texture2D(uSampler0, textureCoord);
+            gl_FragColor = texture2D(uSampler0, vTextureCoord);
         }
     </script>
 
@@ -66,6 +61,7 @@
         uniform vec2 u_resolution;
         uniform vec2 u_mouse;
         uniform float u_time;
+        uniform sampler2D uSampler0;
 
         float random (in vec2 _st) {
             return fract(sin(dot(_st.xy,
@@ -135,7 +131,7 @@
             
             color = mix(vec3(1.0, 1.0, 1.0),
                         vec3(0.4392156862745098, 0.8392156862745098, 1.0),
-                        clamp(t,0.0,1.0));
+                        clamp(t-0.5,0.0,1.0));
             
             color = mix(color,
                         vec3(1.0, 0.4392156862745098, 0.6509803921568627),
@@ -152,21 +148,68 @@
             gl_FragColor = vec4(color,1.0);
         }
     </script>
-    <!--#endregion-->
+
+    <script id="ascii-fs" type="x-shader/x-fragment">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        uniform vec2 u_resolution;
+        uniform sampler2D uRenderTexture;
+        uniform sampler2D charSpriteSheet;
+
+        void main(){
+            vec2 uv = gl_FragCoord.xy/u_resolution.xy;
+            vec2 charUv = fract(uv * vec2(u_resolution.x/8.0,u_resolution.y/8.0));
+            float gScale = texture2D(uRenderTexture,uv,3.0).x;
+            charUv.x = (floor(gScale * 8.0) + charUv.x) / 8.0;
+            //gl_FragColor = vec4(texture2D(charSpriteSheet,charUv));
+            gl_FragColor = texture2D(uRenderTexture,uv,3.0);
+        }
+    </script>
+    <!------------>
 
     <!-- main script -->
-    <script type="module" src="./dist/bundle.js"></script>
+    <script type="module" src="./scripts/main.js"></script>
     <!-- container for the webgl canvas -->
     <div id="canvas"></div>
-    <canvas class="canv" data-fs-id="marble-fs"></canvas>
+
+    
     <!-- actual content starts here -->
-    <!-- TODO: present all the demos like an art galery -->
 
-    <!-- TODO: water defract shader demo-->
-
-    <!-- TODO: ASCII shader demo-->
-
-    <!-- TODO: noise shader demo-->
-     
+    <div class="slide">
+        <div class="fractalBg" data-vs-id="simple-vs" data-fs-id="marble-fs"></div>
+        <h1 class="title">webgl & curtains.js</h1>
+        <p class="intro-text">how melting your gpu can make your website look pretty</p>
+    </div>
+    <br/>
+    <div class="slide">
+        <p>what is webgl</p>
+    </div>
+    <br/>
+    <div class="slide">
+        <p>3d demo</p>
+    </div>
+    <br/>
+    <div class="slide">
+        <div class="fractalBg" data-vs-id="simple-vs" data-fs-id="marble-fs"></div>
+        <p>frag shader demo</p>
+    </div>
+    <br/>
+    <div class="slide">
+        <p>curtains intro with animated & editable 3d curtain</p>
+    </div>
+    <br/>
+    <div class="slide">
+        <div class="asciiTest" data-vs-id="simple-vs" data-fs-id="simple-fs">
+            <img src="./images/asciiTest.jpg" crossorigin=""/>
+        </div>
+    </div>
+    <br/>
+    <div class="slide">
+        <p>water demo</p>
+        <!-- TODO: water defract shader demo-->
+    </div>
 </body>
 </html>

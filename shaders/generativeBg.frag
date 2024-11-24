@@ -6,6 +6,7 @@ precision mediump float;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
+uniform sampler2D uSampler0;
 
 float random (in vec2 _st) {
     return fract(sin(dot(_st.xy,
@@ -89,5 +90,5 @@ void main() {
                 vec3(1.0, 0.8392156862745098, 0.4392156862745098),
                 clamp(s.x-1.2,0.0,1.0));
     
-    gl_FragColor = vec4(color,1.0);
+    //gl_FragColor = vec4(color,1.0);
 }
