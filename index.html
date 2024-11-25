@@ -208,7 +208,7 @@
             float luma = texSample.r*0.2126 + texSample.g*0.7152 +texSample.b*0.0722;
             charUv.x = (floor(luma * 9.99) + charUv.x) / 10.0;
             vec4 charSample = texture2D(charSpriteSheet,charUv);
-            charSample.rgb = charSample.rgb * texSample.rgb;
+            charSample.rgb = charSample.rgb * (texSample.rgb*1.5);
             charSample.a = texture2D(uRenderTexture,vTextureCoord).a;
             gl_FragColor = charSample;
         }
