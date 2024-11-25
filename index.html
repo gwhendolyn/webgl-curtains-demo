@@ -36,6 +36,28 @@
             vVertexPosition = vertexPosition;
         }
     </script>
+
+    <script id="ascii-vs" type="x-shader/x-vertex">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform mat4 charSpriteSheetMatrix;
+
+        void main(){
+            gl_Position = vec4(aVertexPosition, 1.0);
+
+            vTextureCoord = aTextureCoord;
+            vVertexPosition = aVertexPosition;
+        }
+    </script>
     <!------------>
 
     <!------ fragment shaders ------>
@@ -155,23 +177,28 @@
         precision mediump float;
         #endif
 
-        uniform vec2 u_resolution;
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform vec2 uRes;
+        uniform float u_time;
         uniform sampler2D uRenderTexture;
         uniform sampler2D charSpriteSheet;
 
         void main(){
-            vec2 uv = gl_FragCoord.xy/u_resolution.xy;
-            vec2 charUv = fract(uv * vec2(u_resolution.x/8.0,u_resolution.y/8.0));
-            float gScale = texture2D(uRenderTexture,uv,3.0).x;
-            charUv.x = (floor(gScale * 8.0) + charUv.x) / 8.0;
-            //gl_FragColor = vec4(texture2D(charSpriteSheet,charUv));
-            gl_FragColor = texture2D(uRenderTexture,uv,3.0);
+            vec2 charUv = fract(vTextureCoord * vec2(uRes.x/8.0,uRes.y/8.0));
+            float gScale = texture2D(uRenderTexture,vTextureCoord,3.0).x;
+            charUv.x = (floor(gScale * 7.99) + charUv.x) / 8.0;
+            vec4 charSample = texture2D(charSpriteSheet,charUv);
+            charSample.a = texture2D(uRenderTexture,vTextureCoord).a;
+        
+            gl_FragColor = charSample;
         }
     </script>
     <!------------>
 
     <!-- main script -->
-    <script type="module" src="./scripts/main.js"></script>
+    <script type="module" src="./dist/bundle.js"></script>
     <!-- container for the webgl canvas -->
     <div id="canvas"></div>
 
@@ -203,7 +230,7 @@
     <br/>
     <div class="slide">
         <div class="asciiTest" data-vs-id="simple-vs" data-fs-id="simple-fs">
-            <img src="./images/asciiTest.jpg" crossorigin=""/>
+            <img src="./images/asciiTest.png" crossorigin=""/>
         </div>
     </div>
     <br/>

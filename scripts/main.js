@@ -1,8 +1,8 @@
-import {Curtains, Plane, Vec2, RenderTarget, ShaderPass, TextureLoader} from "../node_modules/curtainsjs/src/index.mjs";
+import {Curtains, Plane, Vec2, RenderTarget, ShaderPass, TextureLoader} from "curtainsjs";
 window.addEventListener("load", () => {
+    const curtainCanvas = document.getElementById("canvas");
     const curtains = new Curtains({
         container: "canvas",
-        pixelRatio: window.devicePixelRatio,
         watchScroll: true,
     });
 
@@ -11,14 +11,6 @@ window.addEventListener("load", () => {
     asciiSprites.crossOrigin = "anonymous";
     asciiSprites.src = "../images/charSprites.png";
 
-    let asciiTexture;
-    loader.loadImage(asciiSprites, {
-        sampler: "charSpriteSheet"
-    }, (texture) => {
-        asciiTexture = texture;
-    }, (image, error) => {
-        console.log("oops");
-    });
     
     //#region setup fractal noise backgrounds
     const fractalBgs = document.getElementsByClassName("fractalBg");
@@ -68,25 +60,31 @@ window.addEventListener("load", () => {
     const asciiPlane = new Plane(curtains, asciiTest);
 
     const asciiTarget = new RenderTarget(curtains);
-    //asciiPlane.setRenderTarget(asciiTarget);
+    asciiPlane.setRenderTarget(asciiTarget);
 
-    var asciiRect = asciiTest.getBoundingClientRect;
-    var asciiRes = new Vec2(asciiRect.right-asciiRect.left,asciiRect.bottom-asciiRect.top);
+    var asciiRes = new Vec2(curtainCanvas.offsetWidth,curtainCanvas.offsetHeight);
+    
     const asciiPassParams = {
-        vertexShaderID: "simple-vs",
+        vertexShaderID: "ascii-vs",
         fragmentShaderID: "ascii-fs",
         renderTarget: asciiTarget,
         uniforms:{
             resolution:{
-                name: "u_resolution",
+                name: "uRes",
                 type: "2f",
-                value: asciiRes,
-            }
+                value: asciiRes
+            },
+        },
+        texturesOptions:{
+            generateMipmap:true,
         }
     }
     const asciiPass = new ShaderPass(curtains, asciiPassParams);
-    asciiPass.createTexture({
-        sampler:"charSpriteSheet",
-        fromTexture:asciiTexture});
-    
+    loader.loadImage(asciiSprites, {
+        sampler: "charSpriteSheet"
+    }, (texture) => {
+        asciiPass.addTexture(texture);
+    }, (image, error) => {
+        console.log("oops");
+    });
 });
