@@ -170,7 +170,21 @@
             gl_FragColor = vec4(color,1.0);
         }
     </script>
+    <script id="downscaler-fs" type="x-shader/x-fragment">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
 
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        
+        uniform vec2 uRes;
+        uniform sampler2D uRenderTexture;
+
+        
+        
+    </script>
     <script id="ascii-fs" type="x-shader/x-fragment">
         #version 100
         #ifdef GL_ES
@@ -181,17 +195,21 @@
         varying vec2 vTextureCoord;
 
         uniform vec2 uRes;
-        uniform float u_time;
         uniform sampler2D uRenderTexture;
         uniform sampler2D charSpriteSheet;
-
+        
         void main(){
             vec2 charUv = fract(vTextureCoord * vec2(uRes.x/8.0,uRes.y/8.0));
-            float gScale = texture2D(uRenderTexture,vTextureCoord,3.0).x;
-            charUv.x = (floor(gScale * 7.99) + charUv.x) / 8.0;
+            float dx = 8.0 * (1.0 / uRes.x);
+            float dy = 8.0 * (1.0 / uRes.y);
+            vec2 gCoord = vec2(dx * floor(vTextureCoord.x / dx),
+                               dy * floor(vTextureCoord.y / dy));
+            vec4 texSample = texture2D(uRenderTexture,gCoord);
+            float luma = texSample.r*0.2126 + texSample.g*0.7152 +texSample.b*0.0722;
+            charUv.x = (floor(luma * 9.99) + charUv.x) / 10.0;
             vec4 charSample = texture2D(charSpriteSheet,charUv);
+            charSample.rgb = charSample.rgb * texSample.rgb;
             charSample.a = texture2D(uRenderTexture,vTextureCoord).a;
-        
             gl_FragColor = charSample;
         }
     </script>
@@ -230,7 +248,7 @@
     <br/>
     <div class="slide">
         <div class="asciiTest" data-vs-id="simple-vs" data-fs-id="simple-fs">
-            <img src="./images/asciiTest.png" crossorigin=""/>
+            <img src="./images/asciiTest.jpg" crossorigin=""/>
         </div>
     </div>
     <br/>

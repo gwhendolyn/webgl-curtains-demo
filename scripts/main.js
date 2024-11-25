@@ -58,16 +58,17 @@ window.addEventListener("load", () => {
     const asciiTest = document.getElementsByClassName("asciiTest")[0];
 
     const asciiPlane = new Plane(curtains, asciiTest);
-
+    
+    var asciiRes = new Vec2(curtainCanvas.offsetWidth,curtainCanvas.offsetHeight);
+    
     const asciiTarget = new RenderTarget(curtains);
     asciiPlane.setRenderTarget(asciiTarget);
 
-    var asciiRes = new Vec2(curtainCanvas.offsetWidth,curtainCanvas.offsetHeight);
-    
     const asciiPassParams = {
         vertexShaderID: "ascii-vs",
         fragmentShaderID: "ascii-fs",
         renderTarget: asciiTarget,
+        renderOrder: 0,
         uniforms:{
             resolution:{
                 name: "uRes",
@@ -75,10 +76,8 @@ window.addEventListener("load", () => {
                 value: asciiRes
             },
         },
-        texturesOptions:{
-            generateMipmap:true,
-        }
     }
+    
     const asciiPass = new ShaderPass(curtains, asciiPassParams);
     loader.loadImage(asciiSprites, {
         sampler: "charSpriteSheet"
