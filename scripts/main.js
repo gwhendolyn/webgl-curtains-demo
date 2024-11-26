@@ -61,7 +61,10 @@ window.addEventListener("load", () => {
     
     var asciiRes = new Vec2(curtainCanvas.offsetWidth,curtainCanvas.offsetHeight);
     
-    const asciiTarget = new RenderTarget(curtains);
+    const asciiTarget = new RenderTarget(curtains,{
+        maxWidth: 1920,
+        maxHeight: 1080
+    });
     asciiPlane.setRenderTarget(asciiTarget);
 
     const asciiPassParams = {

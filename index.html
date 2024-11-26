@@ -8,11 +8,12 @@
     <link rel="icon" href="./favicon.ico"/>
     <!--google fonts-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-    <!------ vertex shaders ------>
+    <!------- vertex shaders ------->
     <script id="simple-vs" type="x-shader/x-vertex">
         precision mediump float;
         // those are the mandatory attributes that the lib sets
@@ -58,7 +59,7 @@
             vVertexPosition = aVertexPosition;
         }
     </script>
-    <!------------>
+    <!------------------------------>
 
     <!------ fragment shaders ------>
     <script id="simple-fs" type="x-shader/x-fragment">
@@ -170,21 +171,7 @@
             gl_FragColor = vec4(color,1.0);
         }
     </script>
-    <script id="downscaler-fs" type="x-shader/x-fragment">
-        #version 100
-        #ifdef GL_ES
-        precision mediump float;
-        #endif
 
-        varying vec3 vVertexPosition;
-        varying vec2 vTextureCoord;
-        
-        uniform vec2 uRes;
-        uniform sampler2D uRenderTexture;
-
-        
-        
-    </script>
     <script id="ascii-fs" type="x-shader/x-fragment">
         #version 100
         #ifdef GL_ES
@@ -203,8 +190,8 @@
             vec2 charUv = fract(vTextureCoord * vec2(uRes.x/8.0,uRes.y/8.0));
             
             //get texture sample at bottom left corner of tile
-            float dx = 8.0 * (1.0 / uRes.x);
-            float dy = 8.0 * (1.0 / uRes.y);
+            float dx = 8.0 / uRes.x;
+            float dy = 8.0 / uRes.y;
             vec2 gCoord = vec2(dx * floor(vTextureCoord.x / dx),
                                dy * floor(vTextureCoord.y / dy));
             vec4 texSample = texture2D(uRenderTexture,gCoord);
@@ -228,13 +215,13 @@
             gl_FragColor = charSample;
         }
     </script>
-    <!------------>
+    <!------------------------------>
 
     <!-- main script -->
     <script type="module" src="./dist/bundle.js"></script>
+    
     <!-- container for the webgl canvas -->
     <div id="canvas"></div>
-
     
     <!-- actual content starts here -->
 
@@ -243,30 +230,42 @@
         <h1 class="title">webgl & curtains.js</h1>
         <p class="intro-text">how melting your gpu can make your website look pretty</p>
     </div>
+
     <br/>
+
     <div class="slide">
         <p>what is webgl</p>
     </div>
+
     <br/>
+
     <div class="slide">
         <p>3d demo</p>
     </div>
+
     <br/>
+
     <div class="slide">
         <div class="fractalBg" data-vs-id="simple-vs" data-fs-id="marble-fs"></div>
         <p>frag shader demo</p>
     </div>
+
     <br/>
+
     <div class="slide">
         <p>curtains intro with animated & editable 3d curtain</p>
     </div>
+
     <br/>
+
     <div class="slide">
         <div class="asciiTest" data-vs-id="simple-vs" data-fs-id="simple-fs">
             <img src="./images/asciiTest.jpg" crossorigin=""/>
         </div>
     </div>
+
     <br/>
+    
     <div class="slide">
         <p>water demo</p>
         <!-- TODO: water defract shader demo-->
