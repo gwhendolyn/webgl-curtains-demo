@@ -89,14 +89,14 @@ window.addEventListener("load", () => {
     const asciiTarget = new RenderTarget(curtains);
     const asciiBg = document.getElementsByClassName("asciiBg")[0];
     const asciiText = document.getElementsByClassName("asciiText");
+    const asciiLinks = document.getElementsByClassName("asciiLinks");
     const asciiBgPlane = new Plane(curtains, asciiBg,{
         renderOrder:0,
     });
     asciiBgPlane.onReady(()=>{asciiBgPlane.playVideos();});
     for(let i = 0; i < asciiText.length; i++){
         const asciiTextPlane = new Plane(curtains, asciiText[i], {
-            renderOrder:i+1,
-            widthSegments:10,
+            renderOrder:1,
             uniforms:{
                 time:{
                     name: "u_time",
@@ -116,6 +116,38 @@ window.addEventListener("load", () => {
         });
         asciiTextPlane.setRenderTarget(asciiTarget);
         asciiTextPlane.onRender(() => {asciiTextPlane.uniforms.time.value += 0.01});
+    }
+
+    for(let i = 0; i < asciiLinks.length; i++){
+        const asciiLinkPlane = new Plane(curtains, asciiLinks[i], {
+            renderOrder:1,
+            widthSegments:10,
+            uniforms:{
+                time:{
+                    name: "u_time",
+                    type: "1f",
+                    value: 0.0
+                },
+                mouseover:{
+                    name: "u_mouseover",
+                    type: "1i",
+                    value: 0
+                }
+            }
+        });
+
+        const asciiLinkTextureCanvas = document.createElement("canvas");
+        asciiLinkTextureCanvas.setAttribute("data-sampler", "planeTexture");
+        asciiLinkPlane.loadCanvas(asciiLinkTextureCanvas);
+        asciiLinkPlane.onLoading((texture)=>{
+            texture.shouldUpdate = false;
+
+            writeText(asciiLinkPlane, asciiLinkTextureCanvas, curtains);
+        });
+        asciiLinkPlane.setRenderTarget(asciiTarget);
+        asciiLinkPlane.onRender(() => {asciiLinkPlane.uniforms.time.value += 0.01});
+        asciiLinks[i].addEventListener("mouseover", (event) => {asciiLinkPlane.uniforms.mouseover.value = 1;});
+        asciiLinks[i].addEventListener("mouseout",  (event) => {asciiLinkPlane.uniforms.mouseover.value = 0;});
     }
     
     
