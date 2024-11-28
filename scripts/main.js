@@ -180,12 +180,20 @@ window.addEventListener("load", () => {
     }, (image, error) => {
         console.log("oops");
     });
+    window.addEventListener("resize", () => {
+        asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
+        asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
+    });
     //#endregion
-
+    const waterTargetParams = {
+        
+    }
+    const waterTarget = new RenderTarget(curtains, waterTargetParams);
     const tileBg = document.getElementsByClassName("tileBg")[0];
-    const lightVector = new Vec3(0.57735026919,0.57735026919,0.57735026919);
+    const lightVector = new Vec3(1.0,1.0,0.8);
     const tileRes = new Vec2(tileBg.offsetWidth, tileBg.offsetHeight);
     const tileParams = {
+        renderOrder: 0,
         uniforms:{
             light:{
                 name: "uLight",
@@ -201,4 +209,29 @@ window.addEventListener("load", () => {
     }
 
     const tilePlane = new Plane(curtains, tileBg, tileParams);
+    tilePlane.setRenderTarget(waterTarget);
+    const water = document.getElementsByClassName("water")[0];
+
+    const waterParams = {
+        renderOrder:1,
+        uniforms:{
+            time:{
+                name: "uTime",
+                type: "1f",
+                value: 0.0
+            },
+            light:{
+                name: "uLight",
+                type: "3f",
+                value: lightVector
+            }
+        }
+    }
+
+    const waterPlane = new Plane(curtains, water, waterParams);
+    waterPlane.onRender(() => {waterPlane.uniforms.time.value++;});
+
+
+
+
 });
