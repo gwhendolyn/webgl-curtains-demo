@@ -8,8 +8,8 @@
     <link rel="icon" href="./favicon.ico"/>
     <!--google fonts-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto+Slab:wght@100..900&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -34,6 +34,30 @@
             // set the varyings
             // here we use our texture matrix to calculate the accurate texture coords
             vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+        }
+    </script>
+
+    <script id="text-vs" type="x-shader/x-vertex">
+        precision mediump float;
+        // those are the mandatory attributes that the lib sets
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        //model view and projection matrix
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        //texture matrix that will handle image cover
+        uniform mat4 planeTextureMatrix;
+        // pass vertex and texture coords to the fragment shader
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        uniform float u_time;
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+            // set the varyings
+            // here we use our texture matrix to calculate the accurate texture coords
+            vTextureCoord = (planeTextureMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
             vVertexPosition = vertexPosition;
         }
     </script>
@@ -75,6 +99,66 @@
         }
     </script>
 
+    <script id="bright-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        // get our varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        // our texture sampler (default name, to use a different name please refer to the documentation)
+        uniform sampler2D uSampler0;
+        
+        void main() {
+            vec4 sample = texture2D(uSampler0, vTextureCoord);
+            sample.rgb = sample.rgb * 1.2;
+            gl_FragColor = sample;
+        }
+    </script>
+
+    <script id="black-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        // get our varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        // our texture sampler (default name, to use a different name please refer to the documentation)
+        uniform sampler2D uSampler0;
+        void main() {
+            vec3 color = vec3(0.0);
+            gl_FragColor = vec4(color,1.0);
+        }
+    </script>
+
+    <script id="text-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        // get our varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        // our texture sampler (default name, to use a different name please refer to the documentation)
+        uniform sampler2D planeTexture;
+        void main() {
+            gl_FragColor = texture2D(planeTexture, vTextureCoord);
+        }
+    </script>
+
+    <script id="rainbowText-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        // get our varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        // our texture sampler (default name, to use a different name please refer to the documentation)
+        uniform sampler2D planeTexture;
+        uniform float u_time;
+        void main() {
+            vec4 sample = texture2D(planeTexture, vTextureCoord);
+            float phase = (u_time/4.0)+vTextureCoord.x*3.0;
+            sample.rgb = sample.rgb * ((sin(phase)*0.5)+0.7) * vec3(0.7,1.0,1.0);
+            gl_FragColor = sample;
+        }
+    </script>
+
     <script id="marble-fs" type="x-shader/x-fragment">
         #version 100
         #ifdef GL_ES
@@ -86,6 +170,7 @@
         uniform float u_time;
         uniform sampler2D uSampler0;
 
+        varying vec2 vTextureCoord;
         float random (in vec2 _st) {
             return fract(sin(dot(_st.xy,
                                 vec2(12.9898,78.233)))*
@@ -259,9 +344,18 @@
     <br/>
 
     <div class="slide">
-        <div class="asciiTest" data-vs-id="simple-vs" data-fs-id="simple-fs">
-            <img src="./images/asciiTest.jpg" crossorigin=""/>
+        <div class="asciiBg" data-vs-id="simple-vs" data-fs-id="simple-fs"> 
+            <video crossorigin="" src="./video/asciiBg.mp4"></video>
         </div>
+        <h1 class="asciiText" id="title1" data-vs-id="text-vs" data-fs-id="rainbowText-fs">
+            gwendolyn
+        </h1>
+        <h1 class="asciiText" id="title2" data-vs-id="text-vs" data-fs-id="rainbowText-fs">
+            morgan
+        </h1>
+        <h1 class="asciiText" id="title3" data-vs-id="text-vs" data-fs-id="rainbowText-fs">
+            solberg
+        </h1>
     </div>
 
     <br/>

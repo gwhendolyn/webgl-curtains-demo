@@ -1,4 +1,35 @@
 import {Curtains, Plane, Vec2, RenderTarget, ShaderPass, TextureLoader} from "curtainsjs";
+
+function writeText(plane, canvas, curtains){
+    const htmlPlane = plane.htmlElement;
+    const htmlPlaneStyle = window.getComputedStyle(htmlPlane);
+
+    const planeBoundingRect = plane.getBoundingRect();
+
+    const htmlPlaneWidth = planeBoundingRect.width / curtains.pixelRatio;
+    const htmlPlaneHeight = planeBoundingRect.height /curtains.pixelRatio;
+
+    canvas.width = htmlPlaneWidth;
+    canvas.height = htmlPlaneHeight;
+    const context = canvas.getContext("2d");
+
+    context.width = htmlPlaneWidth;
+    context.height = htmlPlaneHeight;
+
+    context.fillStyle = htmlPlaneStyle.color;
+    context.font = htmlPlaneStyle.fontSize + " " + htmlPlaneStyle.fontFamily;
+    context.fontStyle = htmlPlaneStyle.fontStyle;
+    context.textAlign = htmlPlaneStyle.textAlign;
+
+    context.textBaseline = "middle";
+    context.fillText(htmlPlane.innerText, 0, htmlPlaneHeight / 1.8);
+
+    if(plane.textures.length > 0) {
+        plane.textures[0].resize();
+        plane.textures[0].needUpdate();
+    }
+}
+
 window.addEventListener("load", () => {
     const curtainCanvas = document.getElementById("canvas");
     const curtains = new Curtains({
@@ -6,6 +37,7 @@ window.addEventListener("load", () => {
         watchScroll: true,
     });
 
+    
     const loader = new TextureLoader(curtains);
     const asciiSprites = new Image();
     asciiSprites.crossOrigin = "anonymous";
@@ -54,24 +86,49 @@ window.addEventListener("load", () => {
         });
     };
     //#endregion
+    const asciiTarget = new RenderTarget(curtains);
+    const asciiBg = document.getElementsByClassName("asciiBg")[0];
+    const asciiText = document.getElementsByClassName("asciiText");
+    const asciiBgPlane = new Plane(curtains, asciiBg,{
+        renderOrder:0,
+    });
+    asciiBgPlane.onReady(()=>{asciiBgPlane.playVideos();});
+    for(let i = 0; i < asciiText.length; i++){
+        const asciiTextPlane = new Plane(curtains, asciiText[i], {
+            renderOrder:i+1,
+            widthSegments:10,
+            uniforms:{
+                time:{
+                    name: "u_time",
+                    type: "1f",
+                    value: 0.0
+                }
+            }
+        });
 
-    const asciiTest = document.getElementsByClassName("asciiTest")[0];
+        const asciiTextTextureCanvas = document.createElement("canvas");
+        asciiTextTextureCanvas.setAttribute("data-sampler", "planeTexture");
+        asciiTextPlane.loadCanvas(asciiTextTextureCanvas);
+        asciiTextPlane.onLoading((texture)=>{
+            texture.shouldUpdate = false;
 
-    const asciiPlane = new Plane(curtains, asciiTest);
+            writeText(asciiTextPlane, asciiTextTextureCanvas, curtains);
+        });
+        asciiTextPlane.setRenderTarget(asciiTarget);
+        asciiTextPlane.onRender(() => {asciiTextPlane.uniforms.time.value += 0.01});
+    }
+    
     
     var asciiRes = new Vec2(curtainCanvas.offsetWidth,curtainCanvas.offsetHeight);
     
-    const asciiTarget = new RenderTarget(curtains,{
-        maxWidth: 1920,
-        maxHeight: 1080
-    });
-    asciiPlane.setRenderTarget(asciiTarget);
+    
+    asciiBgPlane.setRenderTarget(asciiTarget);
 
     const asciiPassParams = {
         vertexShaderID: "ascii-vs",
         fragmentShaderID: "ascii-fs",
         renderTarget: asciiTarget,
-        renderOrder: 0,
+        renderOrder: 1,
         uniforms:{
             resolution:{
                 name: "uRes",

@@ -16,19 +16,20 @@ body {
     bottom: 0;
     left: 0;
     height: 100%;
+    z-index: 1;
+    pointer-events: none;
 }
 .slide{
     scroll-snap-align: center;
+    display:flex;
+    flex-direction: column;
     position: relative;
     background-color: rgba(0,0,0,0);
+    overflow: hidden;
     width: 90vw;
     height: 90vh;
     margin: 5vh 5vw;
     box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
-}
-.slide img{
-    width: 100%;
-    height: 100%;
 }
 .fractalBg {
     position: absolute;
@@ -43,6 +44,7 @@ body {
     font-size: 60pt;
     font-weight: 100;
     font-style: italic;
+    z-index: 2;
 }
 .intro-text{
     position:absolute;
@@ -52,13 +54,29 @@ body {
     color: #121212;
     font-size: 24pt;
     font-weight: 400;
+    z-index: 2;
 }
-.asciiTest{
+.asciiBg{
     position: absolute;
     width: 100%;
     height: 100%;
-    z-index: 1;
 }
-.asciiTest img{
-    display: none;
+.asciiText{
+    font-family: "Roboto Slab";
+    color:white;
+    font-size: 132pt;
+    font-style: italic;
+    font-weight: 700;
+    margin:0;
+}
+#title1{
+    margin-left:3vw;
+}
+#title2{
+    margin:5vh auto;
+}
+#title3{
+    align-self:self-end;
+    width:fit-content;
+    margin:0 3vw 0 0;
 }
