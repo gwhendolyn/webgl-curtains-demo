@@ -1,4 +1,4 @@
-import {Curtains, Plane, Vec2, RenderTarget, ShaderPass, TextureLoader} from "curtainsjs";
+import {Curtains, Plane, Vec2, RenderTarget, ShaderPass, TextureLoader, Vec3} from "curtainsjs";
 
 function writeText(plane, canvas, curtains){
     const htmlPlane = plane.htmlElement;
@@ -44,7 +44,7 @@ window.addEventListener("load", () => {
     asciiSprites.src = "../images/charSprites.png";
 
     
-    //#region setup fractal noise backgrounds
+    //#region --setup fractal noise backgrounds--
     const fractalBgs = document.getElementsByClassName("fractalBg");
     
     for (const fractalBg of fractalBgs){
@@ -86,6 +86,8 @@ window.addEventListener("load", () => {
         });
     };
     //#endregion
+
+    //#region --ascii stuff--
     const asciiTarget = new RenderTarget(curtains);
     const asciiBg = document.getElementsByClassName("asciiBg")[0];
     const asciiText = document.getElementsByClassName("asciiText");
@@ -178,4 +180,25 @@ window.addEventListener("load", () => {
     }, (image, error) => {
         console.log("oops");
     });
+    //#endregion
+
+    const tileBg = document.getElementsByClassName("tileBg")[0];
+    const lightVector = new Vec3(0.57735026919,0.57735026919,0.57735026919);
+    const tileRes = new Vec2(tileBg.offsetWidth, tileBg.offsetHeight);
+    const tileParams = {
+        uniforms:{
+            light:{
+                name: "uLight",
+                type: "3f",
+                value: lightVector
+            },
+            resolution:{
+                name: "uRes",
+                type: "2f",
+                value: tileRes
+            }
+        }
+    }
+
+    const tilePlane = new Plane(curtains, tileBg, tileParams);
 });

@@ -113,6 +113,33 @@
             vVertexPosition = aVertexPosition;
         }
     </script>
+
+    <script id="tile-vs" type="x-shader/x-vertex">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        uniform mat4 uColorMatrix;
+        uniform mat4 uNormalMatrix;
+        uniform mat4 uRoughnessMatrix;
+
+        void main(){
+            vec3 vertexPosition = aVertexPosition;
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition,1.0);
+
+            vTextureCoord = (uColorMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+        }
+    </script>
     <!------------------------------>
 
     <!------ fragment shaders ------>
@@ -330,6 +357,31 @@
             gl_FragColor = charSample;
         }
     </script>
+
+    <script id="tile-fs" type="x-shader/x-fragment">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        
+        uniform vec2 uRes; 
+        uniform vec3 uLight;
+        uniform sampler2D uColor;
+        uniform sampler2D uNormal;
+        uniform sampler2D uRoughness;
+        
+        void main(){
+            vec2 uv = fract(vTextureCoord * 4.0);
+            vec3  color = texture2D(uColor, uv).rgb;
+            vec3  norm  = texture2D(uNormal, uv).rgb;
+            float rough = texture2D(uRoughness, uv).r;
+            float diffuse = max(0.0, dot(uLight, norm));
+            gl_FragColor = vec4((color*diffuse),1.0);
+        }
+    </script>
     <!------------------------------>
 
     <!-- main script -->
@@ -402,8 +454,11 @@
     <br/>
     
     <div class="slide">
-        <p>water demo</p>
-        <!-- TODO: water defract shader demo-->
+        <div class="tileBg" data-vs-id="tile-vs" data-fs-id="tile-fs">
+            <img crossorigin="" data-sampler="uColor"     src="./images/tiles-alt/Tiles134A_2K-PNG_Color.png"/>
+            <img crossorigin="" data-sampler="uNormal"    src="./images/tiles-alt/Tiles134A_2K-PNG_NormalGL.png"/>
+            <img crossorigin="" data-sampler="uRoughness" src="./images/tiles-alt/Tiles134A_2K-PNG_Roughness.png"/>
+        </div>
     </div>
 </body>
 </html>
