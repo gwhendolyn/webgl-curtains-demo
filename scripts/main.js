@@ -304,6 +304,4 @@ window.addEventListener("load", () => {
         waterRefractPlane.uniforms.ratio.value.y = tileAD.offsetHeight/curtainCanvas.offsetHeight;
 
     });
-
-
 });
