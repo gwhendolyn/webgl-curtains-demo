@@ -73,7 +73,7 @@ window.addEventListener("load", () => {
 
         const bgPlane = new Plane(curtains, fractalBg, params);
         bgPlane.onRender(() => {
-            bgPlane.uniforms.time.value += 0.01;
+            bgPlane.uniforms.time.value += 0.03;
         });
         fractalBg.addEventListener("mousemove", (event) => {
             var rect = fractalBg.getBoundingClientRect();
@@ -117,7 +117,7 @@ window.addEventListener("load", () => {
             writeText(asciiTextPlane, asciiTextTextureCanvas, curtains);
         });
         asciiTextPlane.setRenderTarget(asciiTarget);
-        asciiTextPlane.onRender(() => {asciiTextPlane.uniforms.time.value += 0.01});
+        asciiTextPlane.onRender(() => {asciiTextPlane.uniforms.time.value += 0.03});
     }
 
     for(let i = 0; i < asciiLinks.length; i++){
@@ -147,7 +147,7 @@ window.addEventListener("load", () => {
             writeText(asciiLinkPlane, asciiLinkTextureCanvas, curtains);
         });
         asciiLinkPlane.setRenderTarget(asciiTarget);
-        asciiLinkPlane.onRender(() => {asciiLinkPlane.uniforms.time.value += 0.01});
+        asciiLinkPlane.onRender(() => {asciiLinkPlane.uniforms.time.value += 0.03});
         asciiLinks[i].addEventListener("mouseover", (event) => {asciiLinkPlane.uniforms.mouseover.value = 1;});
         asciiLinks[i].addEventListener("mouseout",  (event) => {asciiLinkPlane.uniforms.mouseover.value = 0;});
     }
@@ -234,7 +234,7 @@ window.addEventListener("load", () => {
             fromTexture: waterTarget.getTexture(),
         });
     });
-    waterPlane.onRender(() => {waterPlane.uniforms.time.value++;});
+    waterPlane.onRender(() => {waterPlane.uniforms.time.value+=3;});
     
     window.addEventListener("resize", () => {
         asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
