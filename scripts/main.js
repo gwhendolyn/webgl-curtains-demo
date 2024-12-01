@@ -206,8 +206,8 @@ window.addEventListener("load", () => {
 
     const waterParams = {
         renderOrder:1,
-        widthSegments:200,
-        heightSegments:200,
+        widthSegments:100,
+        heightSegments:100,
         uniforms:{
             ratio:{
                 name: "uRatio",
