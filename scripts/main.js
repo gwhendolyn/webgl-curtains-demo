@@ -233,7 +233,7 @@ window.addEventListener("load", () => {
             fromTexture: waterTarget.getTexture(),
         });
     });
-    waterPlane.onRender(() => {waterPlane.uniforms.time.value+=3;});
+    waterPlane.onRender(() => {waterPlane.uniforms.time.value+=1;});
     
     window.addEventListener("resize", () => {
         asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
