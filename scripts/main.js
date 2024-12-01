@@ -41,7 +41,7 @@ window.addEventListener("load", () => {
     const loader = new TextureLoader(curtains);
     const asciiSprites = new Image();
     asciiSprites.crossOrigin = "anonymous";
-    asciiSprites.src = "../images/charSprites.png";
+    asciiSprites.src = "/webgl-curtains-demo/images/charSprites.png";
 
     
     //#region --setup fractal noise backgrounds--
