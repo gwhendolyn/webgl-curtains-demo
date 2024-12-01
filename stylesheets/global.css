@@ -94,14 +94,13 @@ body {
     text-decoration: none;
     font-style: bold;
 }
-#water{
-    pointer-events: none;
+.tileBg{
     position: absolute;
     width:100%;
     height:100%;
-    z-index: -1;
 }
-#water img{
-    display:none;
+.water{
+    position: absolute;
+    width:100%;
+    height:100%;
 }
-
