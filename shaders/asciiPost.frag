@@ -14,4 +14,5 @@ void main(){
     float gScale = texture2D(uRenderTexture,uv,3.0).x;
     charUv.x = (floor(gScale * 8.0) + charUv.x) / 7.0;
     gl_FragColor = vec4(texture2D(charSpriteSheet,charUv));
+
 }

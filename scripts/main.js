@@ -180,19 +180,19 @@ window.addEventListener("load", () => {
     }, (image, error) => {
         console.log("oops");
     });
-    window.addEventListener("resize", () => {
-        asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
-        asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
-    });
+    
     //#endregion
-    const waterTargetParams = {
-        
-    }
-    const waterTarget = new RenderTarget(curtains, waterTargetParams);
-    const tileBg = document.getElementsByClassName("tileBg")[0];
-    const lightVector = new Vec3(1.0,1.0,0.8);
-    const tileRes = new Vec2(tileBg.offsetWidth, tileBg.offsetHeight);
-    const tileParams = {
+
+    const lightVector = new Vec3(1.0,1.0,1.0);
+    
+
+    //frame buffer to accept our tile ambient and diffuse render and html content
+    const waterFB1 = new RenderTarget(curtains);
+    
+    //getting element and setting params for tile ambient and diffuse render
+    const tileAD = document.getElementsByClassName("tileAD")[0];
+    const tileRes = new Vec2(tileAD.offsetWidth, tileAD.offsetHeight);
+    const tileADParams = {
         renderOrder: 0,
         uniforms:{
             light:{
@@ -207,18 +207,72 @@ window.addEventListener("load", () => {
             }
         }
     }
-
-    const tilePlane = new Plane(curtains, tileBg, tileParams);
-    tilePlane.setRenderTarget(waterTarget);
-    const water = document.getElementsByClassName("water")[0];
-
-    const waterParams = {
-        renderOrder:1,
+    //creating AD plane and adding it to fb1
+    const tileADPlane = new Plane(curtains, tileAD, tileADParams);
+    tileADPlane.setRenderTarget(waterFB1);
+    
+    //frame buffer to accept our water surface normals
+    const waterFB2 = new RenderTarget(curtains);
+    //getting element and setting params for water normals
+    const waterNorm = document.getElementsByClassName("waterNormals")[0];
+    const waterNormParams = {
+        renderOrder:0,
+        widthSegments: 200,
+        heightSegments: 200,
         uniforms:{
             time:{
                 name: "uTime",
                 type: "1f",
                 value: 0.0
+            },
+        }
+    }
+
+    //creating water normals plane and adding it to fb2
+    const waterNormPlane = new Plane(curtains, waterNorm, waterNormParams);
+    waterNormPlane.setRenderTarget(waterFB2);
+    //updating water normal uniforms
+    waterNormPlane.onRender(() => {waterNormPlane.uniforms.time.value++;});
+
+    //frame buffer to accept tile render with water caustics
+    const waterFB3 = new RenderTarget(curtains);
+    //getting water caustics container and setting params
+    var ratio = new Vec2(tileRes.x/curtainCanvas.offsetWidth,tileRes.y/curtainCanvas.offsetHeight);
+    const waterCaustic = document.getElementsByClassName("waterCaustics")[0];
+    const waterCausticParams = {
+        renderOrder:1,
+        uniforms:{
+            ratio:{
+                name: "uRatio",
+                type: "2f",
+                value: ratio
+            }
+        }
+    }
+    
+    //creating water caustics plane, giving it fb1 and fb2 and rendering out to fb3
+    const waterCausticPlane = new Plane(curtains, waterCaustic, waterCausticParams);
+    waterCausticPlane.setRenderTarget(waterFB3);
+    waterCausticPlane.onReady(() => {
+        waterCausticPlane.createTexture({
+            sampler: "uTileAD",
+            fromTexture: waterFB1.getTexture(),
+        });
+        waterCausticPlane.createTexture({
+            sampler: "uWaterNormals",
+            fromTexture: waterFB2.getTexture(),
+        });
+    });
+
+    //getting water refraction container and setting params
+    const waterRefract = document.getElementsByClassName("waterRefraction")[0];
+    const waterRefractParams = {
+        renderOrder:2,
+        uniforms:{
+            ratio:{
+                name: "uRatio",
+                type: "2f",
+                value: ratio
             },
             light:{
                 name: "uLight",
@@ -228,10 +282,26 @@ window.addEventListener("load", () => {
         }
     }
 
-    const waterPlane = new Plane(curtains, water, waterParams);
-    waterPlane.onRender(() => {waterPlane.uniforms.time.value++;});
+    //creating water refraction plane and rendering to screen
+    const waterRefractPlane = new Plane(curtains, waterRefract, waterRefractParams);
+    waterRefractPlane.onReady(() => {
+        waterRefractPlane.createTexture({
+            sampler: "uWaterCaustics",
+            fromTexture: waterFB3.getTexture(),
+        });
+        waterRefractPlane.createTexture({
+            sampler: "uWaterNormals",
+            fromTexture: waterFB2.getTexture(),
+        });
+    });
 
+    window.addEventListener("resize", () => {
+        asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
+        asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
+        waterCausticPlane.uniforms.ratio.value.x = tileAD.offsetWidth/curtainCanvas.offsetWidth;
+        waterCausticPlane.uniforms.ratio.value.y = tileAD.offsetHeight/curtainCanvas.offsetHeight;
+        waterRefractPlane.uniforms.ratio.value.x = tileAD.offsetWidth/curtainCanvas.offsetWidth;
+        waterRefractPlane.uniforms.ratio.value.y = tileAD.offsetHeight/curtainCanvas.offsetHeight;
 
-
-
+    });
 });
