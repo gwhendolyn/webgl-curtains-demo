@@ -95,12 +95,20 @@ body {
     font-style: bold;
 }
 .tileBg{
-    position: absolute;
+    position:absolute;
     width:100%;
-    height:100%;
+    height:40%;
+}
+.tileBg img{
+    display:none;
+}
+.tileContent{
+    position:absolute;
+    width:100%;
+    height:40%;
 }
 .water{
     position: absolute;
     width:100%;
-    height:100%;
+    height:40%;
 }

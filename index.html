@@ -437,7 +437,7 @@
         uniform sampler2D uRoughness;
         #define AMBIENT 0.4
         void main(){
-            vec2  uv = fract(vTextureCoord * 4.0);
+            vec2  uv = fract(vTextureCoord * 5.0);
             vec3  view  = normalize(vec3(0.0,0.0,1.0)+vVertexPosition);
             vec3  light = normalize(uLight);
             vec3  halfA = normalize(view+light);
@@ -463,23 +463,31 @@
         varying vec3 vSurfaceNormal;
         varying float vCaustic;
         uniform vec3 uLight;
-        uniform vec2 uRatio;
+        uniform vec2 uRes;
         uniform float uTime;
         uniform sampler2D uTiles;
 
         #define IOR 1.33
         void main(){
-            vec2 uv = vTextureCoord * (uRatio-0.01) + (1.0 - (uRatio-0.01)) / 2.0;
+            //getting normalized screenspace position
+            vec2 uv = gl_FragCoord.xy / uRes;
+            //handling overscan so refractions don't show off texture
+            uv += 0.03;
+            uv *= 0.96;
+            //getting required vectors for lighting
             vec3 norm  = normalize(vSurfaceNormal);
             vec3 view  = normalize(vec3(0.0,0.0,1.0)+vVertexPosition);
             vec3 light = normalize(uLight);
             vec3 halfA = normalize(view+light);
             vec3 refracted = refract(vec3(0.0,0.0,1.0), norm, 1.0/IOR);
             vec3 color = texture2D(uTiles, uv + refracted.xy).rgb;
+            //calculating lighting terms
             float caustic = max(0.0,(vCaustic+0.00075)*70.0);
             float diffuse  = max(0.0, dot(uLight, norm));
-            float specular = max(0.0, pow(dot(norm, halfA), 1024.0));
+            float specular = max(0.0, pow(dot(norm, halfA), 2048.0));
+            //multiplying lighting terms with light color
             vec3  lightColor = vec3(0.9922,0.9943,0.9975) * (diffuse+specular+caustic);
+            //outputting final color
             gl_FragColor = vec4(color * lightColor, 1.0);
         }
     </script>

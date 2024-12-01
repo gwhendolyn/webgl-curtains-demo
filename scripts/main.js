@@ -188,7 +188,6 @@ window.addEventListener("load", () => {
     const waterTarget = new RenderTarget(curtains, waterTargetParams);
     const tileBg = document.getElementsByClassName("tileBg")[0];
     const lightVector = new Vec3(0.3,0.3,1.0);
-    const tileRatio = new Vec2(tileBg.offsetWidth/curtainCanvas.offsetWidth, tileBg.offsetHeight/curtainCanvas.offsetHeight);
     const tileParams = {
         renderOrder: 0,
         uniforms:{
@@ -207,12 +206,12 @@ window.addEventListener("load", () => {
     const waterParams = {
         renderOrder:1,
         widthSegments:100,
-        heightSegments:100,
+        heightSegments:40,
         uniforms:{
-            ratio:{
-                name: "uRatio",
+            resolution:{
+                name: "uRes",
                 type: "2f",
-                value: tileRatio
+                value: new Vec2(curtainCanvas.offsetWidth, curtainCanvas.offsetHeight),
             },
             time:{
                 name: "uTime",
@@ -239,9 +238,10 @@ window.addEventListener("load", () => {
     window.addEventListener("resize", () => {
         asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
         asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
-        waterPlane.uniforms.ratio.value.x = tileBg.offsetWidth/curtainCanvas.offsetWidth;
-        waterPlane.uniforms.ratio.value.y = tileBg.offsetHeight/curtainCanvas.offsetHeight;
+        waterPlane.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
+        waterPlane.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
     });
+
 
 
 
