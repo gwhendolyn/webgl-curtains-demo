@@ -180,18 +180,15 @@ window.addEventListener("load", () => {
     }, (image, error) => {
         console.log("oops");
     });
-    window.addEventListener("resize", () => {
-        asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
-        asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
-    });
+    
     //#endregion
     const waterTargetParams = {
         
     }
     const waterTarget = new RenderTarget(curtains, waterTargetParams);
     const tileBg = document.getElementsByClassName("tileBg")[0];
-    const lightVector = new Vec3(1.0,1.0,0.8);
-    const tileRes = new Vec2(tileBg.offsetWidth, tileBg.offsetHeight);
+    const lightVector = new Vec3(0.3,0.3,1.0);
+    const tileRatio = new Vec2(tileBg.offsetWidth/curtainCanvas.offsetWidth, tileBg.offsetHeight/curtainCanvas.offsetHeight);
     const tileParams = {
         renderOrder: 0,
         uniforms:{
@@ -200,11 +197,6 @@ window.addEventListener("load", () => {
                 type: "3f",
                 value: lightVector
             },
-            resolution:{
-                name: "uRes",
-                type: "2f",
-                value: tileRes
-            }
         }
     }
 
@@ -214,7 +206,14 @@ window.addEventListener("load", () => {
 
     const waterParams = {
         renderOrder:1,
+        widthSegments:200,
+        heightSegments:200,
         uniforms:{
+            ratio:{
+                name: "uRatio",
+                type: "2f",
+                value: tileRatio
+            },
             time:{
                 name: "uTime",
                 type: "1f",
@@ -229,8 +228,20 @@ window.addEventListener("load", () => {
     }
 
     const waterPlane = new Plane(curtains, water, waterParams);
+    waterPlane.onReady(() => {
+        waterPlane.createTexture({
+            sampler: "uTiles",
+            fromTexture: waterTarget.getTexture(),
+        });
+    });
     waterPlane.onRender(() => {waterPlane.uniforms.time.value++;});
-
+    
+    window.addEventListener("resize", () => {
+        asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
+        asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
+        waterPlane.uniforms.ratio.value.x = tileBg.offsetWidth/curtainCanvas.offsetWidth;
+        waterPlane.uniforms.ratio.value.y = tileBg.offsetHeight/curtainCanvas.offsetHeight;
+    });
 
 
 
