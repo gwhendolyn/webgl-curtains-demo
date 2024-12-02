@@ -86,7 +86,28 @@ window.addEventListener("load", () => {
         });
     };
     //#endregion
-
+    const a3dDemo = document.getElementsByClassName("a3dDemo")[0];
+    const demoParams = {
+        widthSegments: 10,
+        heightSegments: 10,
+        cullFace: "none",
+        uniforms:{
+            time:{
+                name: "uTime",
+                type: "1f",
+                value: 0.0
+            }
+        }
+    };
+    const demoPlane = new Plane(curtains, a3dDemo, demoParams);
+    demoPlane.onReady(() => {
+        demoPlane.rotation.x = - Math.PI / 4.0;
+    });
+    demoPlane.onRender(() => {
+        demoPlane.uniforms.time.value++;
+        demoPlane.rotation.y += Math.PI / 1000;
+        demoPlane.rotation.z += Math.PI / 1000;
+    });
     //#region --ascii stuff--
     const asciiTarget = new RenderTarget(curtains);
     const asciiBg = document.getElementsByClassName("asciiBg")[0];

@@ -38,6 +38,35 @@
         }
     </script>
 
+    <script id="3dDemo-vs" type="x-shader/x-vertex">
+        precision mediump float;
+        // those are the mandatory attributes that the lib sets
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        //model view and projection matrix
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        //texture matrix that will handle image cover
+        uniform mat4 uTextureMatrix0;
+        uniform float uTime;
+        // pass vertex and texture coords to the fragment shader
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        varying float vHeight;
+
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+
+            vertexPosition.z = 0.03 * sin(abs(vertexPosition.x*vertexPosition.y-0.5) * 4.0 + uTime * 0.03);
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+            // set the varyings
+            // here we use our texture matrix to calculate the accurate texture coords
+            vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+            vHeight = vertexPosition.z;
+        }
+    </script>
+
     <script id="text-vs" type="x-shader/x-vertex">
         precision mediump float;
         // those are the mandatory attributes that the lib sets
@@ -228,6 +257,22 @@
         uniform sampler2D uSampler0;
         void main() {
             gl_FragColor = texture2D(uSampler0, vTextureCoord);
+        }
+    </script>
+
+    <script id="3dDemo-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        // get our varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        varying float vHeight;
+
+        // our texture sampler (default name, to use a different name please refer to the documentation)
+        uniform sampler2D uSampler0;
+        void main() {
+            vec4 sample = texture2D(uSampler0, vTextureCoord);
+            sample.rgb *= vHeight*10.0+1.0;
+            gl_FragColor = sample;
         }
     </script>
 
@@ -539,13 +584,18 @@
     <br/>
 
     <div class="slide">
-        <p>what is webgl</p>
+        <div class="introImgContainer">
+            <img class="introImg" id="small" src="./images/WebGL_Logo.png"/>
+            <img class="introImg" src="./images/OpenGL_pipeline.png"/>
+        </div>
     </div>
 
     <br/>
 
     <div class="slide">
-        <p>3d demo</p>
+        <div class="a3dDemo" data-vs-id="3dDemo-vs" data-fs-id="3dDemo-fs">
+            <img crossorigin="" src="./images/wall.webp"/>
+        </div>
     </div>
 
     <br/>

@@ -138,11 +138,12 @@ body {
 .fakeContent{
     display:flex;
     box-shadow: inset rgba(0, 0, 0, 0.25) 0px 54px 20px;
+    height:60%;
 }
 .fakeText{
     width: 50%;
     padding: 1%;
-    font-size: 14pt;
+    font-size: 16pt;
 }
 .fakeText p{
     margin:0;
@@ -150,4 +151,30 @@ body {
 .fakeImg{
     width:50%;
     padding: 1%;
+}
+.fakeImg img{
+    width:100%;
+}
+.introImgContainer{
+    display: flex;
+    flex-direction: column;
+    margin:auto;
+    height: 100%;
+}
+.introImg{
+    height: 50%;
+    width:auto;
+    padding: 2%;
+    margin: auto;
+}
+#small{
+    height: 20%;
+}
+.a3dDemo{
+    width: 512px;
+    height: 512px;
+    margin:auto;
+}
+.a3dDemo img{
+    display: none;
 }
