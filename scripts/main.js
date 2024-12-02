@@ -173,7 +173,7 @@ window.addEventListener("load", () => {
             writeText(asciiTextPlane, asciiTextTextureCanvas, curtains);
         });
         asciiTextPlane.setRenderTarget(asciiTarget);
-        asciiTextPlane.onRender(() => {asciiTextPlane.uniforms.time.value += 0.03});
+        asciiTextPlane.onRender(() => {asciiTextPlane.uniforms.time.value += 0.05});
     }
 
     for(let i = 0; i < asciiLinks.length; i++){
