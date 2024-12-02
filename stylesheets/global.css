@@ -98,22 +98,55 @@ body {
     position:absolute;
     width:100%;
     height:40%;
+    pointer-events: none;
 }
 .tileBg img{
     display:none;
 }
 .tileContent{
-    position:absolute;
+    position: static;
     width:100%;
     height:40%;
     display: flex;
     flex-direction: column;
 }
-.tileContent{
+.tileLogo{
+    width: 500px;
+    height: 550px;
+    margin:auto;
+}
+.tileLogo img{
+    display:none;
+}
+.tileLinks{
     display: flex;
+    margin-bottom:2%;
+}
+.tileLink{
+    margin:auto;
+    font-weight: 100;
+    font-size: 32pt;
+    color: #e2f9fd;
+    cursor: pointer;
 }
 .water{
     position: absolute;
     width:100%;
     height:40%;
+    pointer-events: none;
+}
+.fakeContent{
+    display:flex;
+    box-shadow: inset rgba(0, 0, 0, 0.25) 0px 54px 20px;
+}
+.fakeText{
+    width: 50%;
+    padding: 1%;
+    font-size: 14pt;
+}
+.fakeText p{
+    margin:0;
+}
+.fakeImg{
+    padding: 1%;
 }

@@ -180,18 +180,25 @@
             float der = 0.0;
 
             for(float i = 1.0; i < OCTAVES+1.0; i++){
+                //generate random direction vector
                 directionVector.x = (random(vec2(i*1.3,i+1.2))-0.5)*2.0;
                 directionVector.y = (random(vec2(i+1.11,i*1.5))-0.5)*2.0;
                 directionVector = normalize(directionVector);
                 
+                //calculate wave height contribution and add to vertex z coord
                 float val = amplitude * sin(dot(directionVector, samplePos) * (2.0/wavelength) + uTime * speed);
                 vertexPosition.z += val;
-                doubleDer -= val;
+                
+                //calculate partial derivative and add to total derivative/ binormal and tangent z components
                 partialDer = -amplitude * cos(dot(directionVector, samplePos) * (2.0/wavelength) + uTime * speed);
                 der += partialDer;
                 binormal.z += directionVector.x * partialDer;
                 tangent.z += directionVector.y * partialDer;
                 
+                //add the double derivative to our rolling total
+                doubleDer -= val;
+                
+                //adjust params
                 amplitude *= 0.96;
                 wavelength /= 1.06;
                 samplePos.x += partialDer * directionVector.x;
@@ -202,6 +209,7 @@
             vSurfaceNormal = cross(binormal, tangent);
             
             vCaustic = (smoothstep(0.0, 0.001, abs(der))) * -(doubleDer / abs(doubleDer));
+            
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0); 
             vTextureCoord = (uTilesMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
             vVertexPosition = vertexPosition;
@@ -223,7 +231,7 @@
         }
     </script>
 
-    <script id="bright-fs" type="x-shader/x-fragment">
+    <script id="light-fs" type="x-shader/x-fragment">
         precision mediump float;
         // get our varyings
         varying vec3 vVertexPosition;
@@ -234,7 +242,9 @@
         
         void main() {
             vec4 sample = texture2D(uSampler0, vTextureCoord);
-            sample.rgb = sample.rgb * 1.2;
+            sample.rgb = (1.0 - sample.rgb) * vec3(0.9021568627450,
+                                                   0.9411764705882,
+                                                   0.9725490196078);
             gl_FragColor = sample;
         }
     </script>
@@ -263,6 +273,22 @@
         uniform sampler2D planeTexture;
         void main() {
             gl_FragColor = texture2D(planeTexture, vTextureCoord);
+        }
+    </script>
+
+    <script id="tileLink-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        // get our varyings
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        // our texture sampler (default name, to use a different name please refer to the documentation)
+        uniform sampler2D planeTexture;
+        uniform float u_mouseover;
+        void main() {
+            vec4 sample = texture2D(planeTexture, vTextureCoord);
+            sample.rgb -= (0.9 * u_mouseover);
+            gl_FragColor = sample;
         }
     </script>
 
@@ -492,7 +518,6 @@
             vec3  lightColor = vec3(0.9922,0.9943,0.9975) * (diffuse+specular+caustic);
             //outputting final color
             gl_FragColor = vec4(color * lightColor, 1.0);
-            //gl_FragColor = vec4(norm.xy*100.0, 0.0, 1.0);
         }
     </script>
     <!------------------------------>
@@ -573,17 +598,41 @@
             <img crossorigin="" data-sampler="uRoughness" src="./images/tiles-3/Tiles122_4K-JPG_Roughness.jpg"/>
         </div>
         <div class="tileContent">
-            <div class="tileLogo" data-vs-id="simple-vs" data-fs-id="simple-fs">
-
+            <div class="tileLogo" data-vs-id="simple-vs" data-fs-id="light-fs">
+                <img crossorigin="" src="./images/logo.png"/>
             </div>
             <div class="tileLinks">
-                <a></a>
-                <a></a>
-                <a></a>
-                <a></a>
+                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
+                    contact
+                </a>
+                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
+                    about
+                </a>
+                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
+                    shop
+                </a>
+                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
+                    fourth link
+                </a>
             </div>
         </div>
         <div class="water" data-vs-id="water-vs" data-fs-id="water-fs"></div>
+        <div class="fakeContent">
+            <div class="fakeText">
+                <p>
+                    Lorem ipsum odor amet, consectetuer adipiscing elit. Lectus taciti accumsan orci euismod curabitur. Turpis vestibulum tincidunt inceptos neque est eros porttitor. Sociosqu inceptos quis quis facilisi sociosqu porta aliquam scelerisque. Egestas accumsan arcu dignissim vestibulum fusce. Fermentum lectus ultrices netus montes vestibulum non.
+                    <br><br>
+                    Quam enim laoreet hendrerit congue eu phasellus maecenas dictum. Egestas rhoncus sociosqu leo netus dui integer. Placerat aptent elit hendrerit arcu nostra, condimentum et nisi. Nunc purus sed nec posuere sem. Porta morbi dapibus accumsan quisque placerat. Facilisi egestas condimentum tortor fames condimentum. Vestibulum sem lacinia aliquam sapien tellus ridiculus aptent.
+                    <br><br>
+                    Netus enim elit hendrerit ultrices imperdiet parturient. Parturient conubia per placerat a natoque non, penatibus erat. Feugiat massa per mi netus nisl eros placerat semper. Habitasse nulla nullam in posuere; aliquam porta ipsum dolor. Condimentum magnis mollis, est vel risus nulla. Maecenas eleifend facilisis proin venenatis mollis donec. Etiam sit per ullamcorper habitant dictum commodo class? Facilisi libero consectetur litora; pharetra suscipit magnis urna. Lacus euismod volutpat ornare sagittis habitant class scelerisque. Dui blandit semper, nulla faucibus donec tempor.
+                    <br><br>
+                    Risus dapibus donec metus habitant aliquam. Feugiat etiam primis; quisque hac mauris dui. In convallis conubia ante nullam nibh etiam vestibulum dolor sapien. Aliquet turpis venenatis interdum rutrum dui mi. Lectus tristique egestas nec sodales ante integer maecenas. Augue turpis tristique duis ad gravida. Dui magna platea metus turpis enim magna mus efficitur metus. Scelerisque non blandit mi eget; ullamcorper metus sociosqu suspendisse dis. Donec cras dictum maecenas senectus neque aliquet lacinia. 
+                </p>
+            </div>
+            <div class="fakeImg">
+                <img src="./images/testTexture.jpg"/>
+            </div>
+        </div>
     </div>
 </body>
 </html>

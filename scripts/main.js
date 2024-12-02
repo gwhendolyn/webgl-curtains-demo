@@ -201,10 +201,43 @@ window.addEventListener("load", () => {
 
     const tilePlane = new Plane(curtains, tileBg, tileParams);
     tilePlane.setRenderTarget(waterTarget);
-    const water = document.getElementsByClassName("water")[0];
 
-    const waterParams = {
+    const logo = document.getElementsByClassName("tileLogo")[0];
+    const logoParams ={
         renderOrder:1,
+    }
+    const logoPlane = new Plane(curtains, logo, logoParams);
+    logoPlane.setRenderTarget(waterTarget);
+
+    const tileLinks = document.getElementsByClassName("tileLink");
+    for(let i = 0; i < tileLinks.length; i++){
+        const tileLinkPlane = new Plane(curtains, tileLinks[i], {
+            renderOrder:1,
+            uniforms:{
+                mouseover:{
+                    name: "u_mouseover",
+                    type: "1f",
+                    value: 0.0
+                }
+            }
+        });
+
+        const tileLinkTextureCanvas = document.createElement("canvas");
+        tileLinkTextureCanvas.setAttribute("data-sampler", "planeTexture");
+        tileLinkPlane.loadCanvas(tileLinkTextureCanvas);
+        tileLinkPlane.onLoading((texture)=>{
+            texture.shouldUpdate = false;
+
+            writeText(tileLinkPlane, tileLinkTextureCanvas, curtains);
+        });
+        tileLinkPlane.setRenderTarget(waterTarget);
+        tileLinks[i].addEventListener("mouseover", (event) => {tileLinkPlane.uniforms.mouseover.value = 1.0;});
+        tileLinks[i].addEventListener("mouseout",  (event) => {tileLinkPlane.uniforms.mouseover.value = 0.0;});
+    }
+    
+    const water = document.getElementsByClassName("water")[0];
+    const waterParams = {
+        renderOrder:2,
         widthSegments:100,
         heightSegments:40,
         uniforms:{
