@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <!------- vertex shaders ------->
+    <!--#region vertex shaders ------->
     <script id="simple-vs" type="x-shader/x-vertex">
         precision mediump float;
         // those are the mandatory attributes that the lib sets
@@ -267,9 +267,9 @@
             vVertexPosition = vertexPosition;
         }
     </script>
-    <!------------------------------>
+    <!--#endregion--------------------------->
 
-    <!------ fragment shaders ------>
+    <!--#region fragment shaders ----->
     <script id="simple-fs" type="x-shader/x-fragment">
         precision mediump float;
         // get our varyings
@@ -610,7 +610,7 @@
             gl_FragColor = vec4(color * lightColor, 1.0);
         }
     </script>
-    <!------------------------------>
+    <!--#endregion---------------------------->
 
     <!-- main script -->
     <script type="module" src="./dist/bundle.js"></script>
