@@ -1,5 +1,6 @@
-import {Curtains, Plane, Vec2, RenderTarget, ShaderPass, TextureLoader, Vec3} from "curtainsjs";
+import {Curtains, Plane, TextureLoader, RenderTarget, ShaderPass, Vec2, Vec3} from "curtainsjs";
 
+//writes text into a canvas and applies the canvas as a texture to a plane
 function writeText(plane, canvas, curtains){
     const htmlPlane = plane.htmlElement;
     const htmlPlaneStyle = window.getComputedStyle(htmlPlane);
@@ -31,20 +32,22 @@ function writeText(plane, canvas, curtains){
 }
 
 window.addEventListener("load", () => {
+
+    //setup curtains and our texture loader
     const curtainCanvas = document.getElementById("canvas");
     const curtains = new Curtains({
         container: "canvas",
         watchScroll: true,
     });
-
-    
     const loader = new TextureLoader(curtains);
+
+    //load ascii sprite sheet for post processing demo
     const asciiSprites = new Image();
     asciiSprites.crossOrigin = "";
     asciiSprites.src = "./images/charSprites.png";
 
     
-    //#region --setup fractal noise backgrounds--
+    //#region --fractal noise backgrounds--
     const fractalBgs = document.getElementsByClassName("fractalBg");
     
     for (const fractalBg of fractalBgs){
@@ -86,6 +89,8 @@ window.addEventListener("load", () => {
         });
     };
     //#endregion
+    
+    //#region --3d demo and curtain demo--
     const a3dDemo = document.getElementsByClassName("a3dDemo")[0];
     const demoParams = {
         widthSegments: 10,
@@ -108,7 +113,9 @@ window.addEventListener("load", () => {
         demoPlane.rotation.y += Math.PI / 1000;
         demoPlane.rotation.z += Math.PI / 1000;
     });
-    //#region --ascii stuff--
+    //#endregion
+
+    //#region --ascii post processing demo--
     const asciiTarget = new RenderTarget(curtains);
     const asciiBg = document.getElementsByClassName("asciiBg")[0];
     const asciiText = document.getElementsByClassName("asciiText");
@@ -201,8 +208,9 @@ window.addEventListener("load", () => {
     }, (image, error) => {
         console.log("oops");
     });
-    
     //#endregion
+    
+    //#region --water demo--
     const waterTargetParams = {
         
     }
@@ -288,15 +296,13 @@ window.addEventListener("load", () => {
         });
     });
     waterPlane.onRender(() => {waterPlane.uniforms.time.value+=1;});
-    
+    //#endregion
+
+    //add resize listener to update resolution uniforms
     window.addEventListener("resize", () => {
         asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
         asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
         waterPlane.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
         waterPlane.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
     });
-
-
-
-
 });
