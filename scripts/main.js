@@ -1,4 +1,4 @@
-import {Curtains, Plane, TextureLoader, RenderTarget, ShaderPass, Vec2, Vec3} from "curtainsjs";
+import {Curtains, Plane, TextureLoader, RenderTarget, ShaderPass, Vec2, Vec3, FXAAPass} from "curtainsjs";
 
 //writes text into a canvas and applies the canvas as a texture to a plane
 function writeText(plane, canvas, curtains){
@@ -21,9 +21,11 @@ function writeText(plane, canvas, curtains){
     context.font = htmlPlaneStyle.fontSize + " " + htmlPlaneStyle.fontFamily;
     context.fontStyle = htmlPlaneStyle.fontStyle;
     context.textAlign = htmlPlaneStyle.textAlign;
+    const middleAlign = htmlPlaneStyle.textAlign == "center";
 
     context.textBaseline = "middle";
-    context.fillText(htmlPlane.innerText, 0, htmlPlaneHeight / 1.8);
+    
+    context.fillText(htmlPlane.innerText, middleAlign ? htmlPlaneWidth/2 : 0, htmlPlaneHeight/2);
 
     if(plane.textures.length > 0) {
         plane.textures[0].resize();
@@ -37,7 +39,7 @@ window.addEventListener("load", () => {
     const curtainCanvas = document.getElementById("canvas");
     const curtains = new Curtains({
         container: "canvas",
-        watchScroll: true,
+        pixelRatio: 1.0,
     });
     const loader = new TextureLoader(curtains);
 
@@ -93,8 +95,8 @@ window.addEventListener("load", () => {
     //#region --3d demo and curtain demo--
     const a3dDemo = document.getElementsByClassName("a3dDemo")[0];
     const demoParams = {
-        widthSegments: 10,
-        heightSegments: 10,
+        widthSegments: 20,
+        heightSegments: 20,
         cullFace: "none",
         uniforms:{
             time:{
@@ -113,6 +115,32 @@ window.addEventListener("load", () => {
         demoPlane.rotation.y += Math.PI / 1000;
         demoPlane.rotation.z += Math.PI / 1000;
     });
+    //#endregion
+
+    //#region --curtain--
+    const curt = document.getElementsByClassName("curtain")[0];
+    const curtParams ={
+        widthSegments:20,
+        heightSegments:10,
+        uniforms:{
+            time:{
+                name: "uTime",
+                type: "1f",
+                value: 0.0
+            }
+        }
+    };
+    const curtPlane = new Plane(curtains, curt, curtParams);
+    const curtTextureCanvas = document.createElement("canvas");
+    curtTextureCanvas.setAttribute("data-sampler", "planeTexture");
+    curtPlane.loadCanvas(curtTextureCanvas);
+    curtPlane.onLoading((texture)=>{
+        texture.shouldUpdate = false;
+
+        writeText(curtPlane, curtTextureCanvas, curtains);
+    });
+    
+    curtPlane.onRender(() => {curtPlane.uniforms.time.value++;});
     //#endregion
 
     //#region --ascii post processing demo--
@@ -267,8 +295,8 @@ window.addEventListener("load", () => {
     const water = document.getElementsByClassName("water")[0];
     const waterParams = {
         renderOrder:2,
-        widthSegments:100,
-        heightSegments:40,
+        widthSegments:200,
+        heightSegments:80,
         uniforms:{
             resolution:{
                 name: "uRes",
