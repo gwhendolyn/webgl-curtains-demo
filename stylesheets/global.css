@@ -111,8 +111,8 @@ body {
     flex-direction: column;
 }
 .tileLogo{
-    width: 500px;
-    height: 550px;
+    width: 400px;
+    height: 400px;
     margin:auto;
 }
 .tileLogo img{
@@ -125,7 +125,7 @@ body {
 .tileLink{
     margin:auto;
     font-weight: 100;
-    font-size: 32pt;
+    font-size: 14pt;
     color: #e2f9fd;
     cursor: pointer;
 }
@@ -148,5 +148,6 @@ body {
     margin:0;
 }
 .fakeImg{
+    width:50%;
     padding: 1%;
 }

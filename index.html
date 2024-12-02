@@ -511,7 +511,7 @@
             vec3 refracted = refract(vec3(0.0,0.0,1.0), norm, 1.0/IOR);
             vec3 color = texture2D(uTiles, uv + refracted.xy).rgb;
             //calculating lighting terms
-            float caustic = vCaustic * 0.08;
+            float caustic = vCaustic * 0.09;
             float diffuse  = max(0.0, dot(uLight, norm));
             float specular = max(0.0, pow(dot(norm, halfA), 2048.0));
             //multiplying lighting terms with light color
