@@ -244,7 +244,7 @@ window.addEventListener("load", () => {
     }
     const waterTarget = new RenderTarget(curtains, waterTargetParams);
     const tileBg = document.getElementsByClassName("tileBg")[0];
-    const lightVector = new Vec3(0.3,0.3,1.0);
+    const lightVector = new Vec3(0.3,0.5,1.4);
     const tileParams = {
         renderOrder: 0,
         uniforms:{
