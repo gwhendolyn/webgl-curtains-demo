@@ -204,6 +204,7 @@ em{
 .logo{
     width: 13%;
     margin: 7rem auto;
+    z-index: 2;
 }
 .logo img{
     width:100%;
