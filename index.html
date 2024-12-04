@@ -217,19 +217,17 @@
             return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
         }
         
-        #define OCTAVES 24.0
+        #define OCTAVES 12.0
         void main(){
             vec3 vertexPosition = aVertexPosition;
             vec2 samplePos = vertexPosition.xy;
             vec2 directionVector = vec2(0.0);
-            float amplitude = 0.0003;
+            float amplitude = 0.008;
             float wavelength = 0.15;
             float speed = 0.025;
             float partialDer = 0.0;
             vec3 binormal = vec3(1.0,0.0,0.0);
             vec3 tangent = vec3(0.0,1.0,0.0);
-            float doubleDer = 0.0;
-            float der = 0.0;
 
             for(float i = 1.0; i < OCTAVES+1.0; i++){
                 //generate random direction vector
@@ -243,12 +241,9 @@
                 
                 //calculate partial derivative and add to total derivative/ binormal and tangent z components
                 partialDer = -amplitude * cos(dot(directionVector, samplePos) * (2.0/wavelength) + uTime * speed);
-                der += partialDer;
                 binormal.z += directionVector.x * partialDer;
                 tangent.z += directionVector.y * partialDer;
                 
-                //add the double derivative to our rolling total
-                doubleDer -= val;
                 
                 //adjust params
                 amplitude *= 0.85;
@@ -260,10 +255,36 @@
 
             vSurfaceNormal = cross(binormal, tangent);
             
-            vCaustic = (smoothstep(0.0, 0.00001, abs(der))) * -(doubleDer / abs(doubleDer));
             
             gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0); 
             vTextureCoord = (uTilesMatrix * vec4(aTextureCoord, 0.0, 1.0)).xy;
+            vVertexPosition = vertexPosition;
+        }
+    </script>
+
+    <script id="wiggle-vs" type="x-shader/x-vertex">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+        
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+        
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        uniform mat4 uTextureMatrix0;
+        uniform float uTime;
+        
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+
+        void main() {
+            vec3 vertexPosition = aVertexPosition;
+            vertexPosition.z = 0.07 * sin(min((vertexPosition.x-0.5) + (uTime/11.25),1.0)*(uTime/45.0))+0.01;
+
+            gl_Position = uPMatrix * uMVMatrix * vec4(vertexPosition, 1.0);
+            vTextureCoord = (uTextureMatrix0 * vec4(aTextureCoord, 0.0, 1.0)).xy;
             vVertexPosition = vertexPosition;
         }
     </script>
@@ -582,32 +603,54 @@
         varying vec3 vSurfaceNormal;
         varying float vCaustic;
         uniform vec3 uLight;
-        uniform vec2 uRes;
         uniform float uTime;
-        uniform sampler2D uTiles;
+
 
         #define IOR 1.33
         void main(){
-            //getting normalized screenspace position
-            vec2 uv = gl_FragCoord.xy / uRes;
-            //handling overscan so refractions don't show off texture
-            uv *= 0.99;
-            uv += vec2(0.005,0.006);
             //getting required vectors for lighting
-            vec3 norm  = normalize(vSurfaceNormal);
-            vec3 view  = normalize(vec3(0.0,0.0,1.0)+vVertexPosition);
-            vec3 light = normalize(uLight);
+            mat3 rotate = mat3(1.0, 0.0       , 0.0,
+                               0.0, cos(1.308996939), -sin(1.308996939),
+                               0.0, sin(1.308996939), cos(1.308996939));
+            
+            vec3 view  = normalize(vec3(0.0,1.0,0.26795)+vVertexPosition) * rotate;
+            vec3 norm  = normalize(vSurfaceNormal * rotate);
+            vec3 light = normalize(uLight) * rotate;
             vec3 halfA = normalize(view+light);
-            vec3 refracted = refract(vec3(0.0,0.0,1.0), norm, 1.0/IOR);
-            vec3 color = texture2D(uTiles, uv + refracted.xy).rgb;
             //calculating lighting terms
-            float caustic = vCaustic * 0.04;
-            float diffuse  = max(0.0, dot(light, norm));
-            float specular = max(0.0, pow(dot(norm, halfA), 2048.0));
-            //multiplying lighting terms with light color
-            vec3  lightColor = vec3(0.9922,0.9943,0.9975) * (diffuse+specular+caustic);
+            vec3 ambient = 0.01 * vec3(3.0/255.0, 4.0/255.0, 94.0/255.0);
+            vec3 diffuse  = max(0.0, dot(light, norm)) * vec3(173.0/255.0, 232.0/255.0, 244.0/255.0);
+            vec3 specular = pow((1.0-dot(view,norm)),5.0) * max(0.0, pow(dot(norm, halfA), 4.0)) * vec3(253.0/255.0,252.0/255.0,220.0/255.0);
             //outputting final color
-            gl_FragColor = vec4(color * lightColor, 1.0);
+            gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+        }
+    </script>
+
+    <script id="caustic-fs" type="x-shader/x-fragment">
+        #version 100
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
+        varying vec3 vVertexPosition;
+        varying vec2 vTextureCoord;
+        
+        uniform float uTime;
+        uniform sampler2D uSampler0;
+        #define CAUSTIC_SCALE 1.2
+        #define CAUSTIC_SPEED 0.1
+        void main(){
+            vec2 uv1 = vec2(fract(vTextureCoord*CAUSTIC_SCALE + CAUSTIC_SPEED * 0.75 * uTime * 0.005));
+            vec3 sample1 = texture2D(uSampler0, uv1).rgb;
+            float luma1 = sample1.r*0.2126 + sample1.g*0.7152 + sample1.b*0.0722;
+            
+            vec2 uv2 = vec2(fract(vTextureCoord*-CAUSTIC_SCALE + CAUSTIC_SPEED * uTime * 0.005));
+            vec3 sample2 = texture2D(uSampler0, uv2).rgb;
+            float luma2 = sample2.r*0.2126 + sample2.g*0.7152 + sample2.b*0.0722;
+            
+            vec3 color = min(sample1, sample2);
+            float fadeout = 1.0 - smoothstep(0.92, 1.0, vTextureCoord.y);
+            gl_FragColor=vec4(color*3.0, 0.20 * fadeout);
         }
     </script>
     <!--#endregion---------------------------->
@@ -687,48 +730,302 @@
 
     <br/>
     
-    <div class="slide">
-        <div class="tileBg" data-vs-id="tile-vs" data-fs-id="tile-fs">
-            <img crossorigin="" data-sampler="uColor"     src="./images/tiles-3/Tiles122_4K-JPG_Color.jpg"/>
-            <img crossorigin="" data-sampler="uNormal"    src="./images/tiles-3/Tiles122_4K-JPG_NormalGL.jpg">
-            <img crossorigin="" data-sampler="uRoughness" src="./images/tiles-3/Tiles122_4K-JPG_Roughness.jpg"/>
-            <img crossorigin="" data-sampler="uAO"        src="./images/tiles-3/Tiles122_4K-JPG_AmbientOcclusion.jpg"/>
-        </div>
-        <div class="tileContent">
-            <div class="tileLogo" data-vs-id="simple-vs" data-fs-id="light-fs">
-                <img crossorigin="" src="./images/logo.png"/>
-            </div>
-            <div class="tileLinks">
-                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
-                    contact
-                </a>
-                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
-                    about
-                </a>
-                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
-                    shop
-                </a>
-                <a href="#" class="tileLink" data-vs-id="text-vs" data-fs-id="tileLink-fs">
-                    fourth link
-                </a>
-            </div>
-        </div>
+    <div class="slide" id="big">
         <div class="water" data-vs-id="water-vs" data-fs-id="water-fs"></div>
-        <div class="fakeContent">
-            <div class="fakeText">
+        <div class="caustics" data-vs-id="simple-vs" data-fs-id="caustic-fs">
+            <img crossorigin="" src="./images/caustics.jpg"/>
+        </div>
+        <div class="logo">
+            <img src="./images/logo.png"/>
+        </div>
+        <div class="row" id="nav">
+            <a class="navLink">About</a>
+
+            <div class="navSep"></div>
+
+            <a class="navLink">Contact</a>
+
+            <div class="navSep"></div>
+
+            <a class="navLink">News</a>
+
+            <div class="navSep"></div>
+
+            <a class="navLink">Fourth Link</a>
+        </div>
+        <div class="row">
+            <div class="col" id="half">
                 <p>
-                    Lorem ipsum odor amet, consectetuer adipiscing elit. Lectus taciti accumsan orci euismod curabitur. Turpis vestibulum tincidunt inceptos neque est eros porttitor. Sociosqu inceptos quis quis facilisi sociosqu porta aliquam scelerisque. Egestas accumsan arcu dignissim vestibulum fusce. Fermentum lectus ultrices netus montes vestibulum non.
-                    <br><br>
-                    Quam enim laoreet hendrerit congue eu phasellus maecenas dictum. Egestas rhoncus sociosqu leo netus dui integer. Placerat aptent elit hendrerit arcu nostra, condimentum et nisi. Nunc purus sed nec posuere sem. Porta morbi dapibus accumsan quisque placerat. Facilisi egestas condimentum tortor fames condimentum. Vestibulum sem lacinia aliquam sapien tellus ridiculus aptent.
-                    <br><br>
-                    Netus enim elit hendrerit ultrices imperdiet parturient. Parturient conubia per placerat a natoque non, penatibus erat. Feugiat massa per mi netus nisl eros placerat semper. Habitasse nulla nullam in posuere; aliquam porta ipsum dolor. Condimentum magnis mollis, est vel risus nulla. Maecenas eleifend facilisis proin venenatis mollis donec. Etiam sit per ullamcorper habitant dictum commodo class? Facilisi libero consectetur litora; pharetra suscipit magnis urna. Lacus euismod volutpat ornare sagittis habitant class scelerisque. Dui blandit semper, nulla faucibus donec tempor.
-                    <br><br>
-                    Risus dapibus donec metus habitant aliquam. Feugiat etiam primis; quisque hac mauris dui. In convallis conubia ante nullam nibh etiam vestibulum dolor sapien. Aliquet turpis venenatis interdum rutrum dui mi. Lectus tristique egestas nec sodales ante integer maecenas. Augue turpis tristique duis ad gravida. Dui magna platea metus turpis enim magna mus efficitur metus. Scelerisque non blandit mi eget; ullamcorper metus sociosqu suspendisse dis. Donec cras dictum maecenas senectus neque aliquet lacinia. 
+                This is some text, I'm not sure what this company even is, 
+                do they do oceanographic research? do they sell boats? it 
+                doesn't really matter because they don't actually exist I suppose. 
+                I do find the idea of an oceanographic research group having a 
+                website blasted with 3d graphics kinda funny so I guess it's that 
+                now that I think about it. anyway, this is just some text to fill 
+                out the space and make this look like a real website. The content
+                isn't really what this demo is about, it's more about demoing webgl
+                and curtains so what is written here is immaterial to that.
+                <br><br>
+                Physically based rendering (PBR) is a computer graphics approach 
+                that seeks to render images in a way that models the lights and 
+                surfaces with optics in the real world. It is often referred to as 
+                "Physically Based Lighting" or "Physically Based Shading". Many PBR 
+                pipelines aim to achieve photorealism. Feasible and quick 
+                approximations of the bidirectional reflectance distribution function 
+                and rendering equation are of mathematical importance in this field. 
+                Photogrammetry may be used to help discover and encode accurate 
+                optical properties of materials. PBR principles may be implemented 
+                in real-time applications using Shaders or offline applications using 
+                ray tracing or path tracing.
+                <br><br>
+                PBR is, as Joe Wilson puts it, "more of a concept than a strict set 
+                of rules" but the concept contains several distinctive points of 
+                note. One of these is that unlike many previous models that sought 
+                to differentiate surfaces between non-reflective and reflective PBR 
+                recognizes that, in the real world, as John Hable puts it, 
+                "everything is shiny". Even "flat" or "matte" surfaces in the real 
+                world such as concrete will reflect a small degree of light, and 
+                many metals and liquids will reflect a great deal of it. Another 
+                thing that PBR models attempt to do is to integrate photogrammetry 
+                measurements from photographs of real-world materials to study and 
+                replicate real physical ranges of values to accurately simulate 
+                albedo, gloss, reflectivity, and other physical properties. 
+                Finally, PBR puts a great deal of emphasis on microfacets, and will 
+                often contain additional textures and mathematical models intended 
+                to model small-scale specular highlights and cavities resulting 
+                from smoothness or roughness in addition to traditional specular or 
+                reflectivity maps. 
+                <br><br>
+                <em>[from Wikipedia (the free encyclopedia)]</em>
                 </p>
             </div>
-            <div class="fakeImg">
-                <img src="./images/testTexture.jpg"/>
+            <div class="col" id="half">
+                <div class="row">
+                    <div class="col" id="half">
+                        <a href="https://en.wikipedia.org/wiki/Physically_based_rendering">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/491px-Physically_Based_Rendering_Sample_2.png"/>
+                        </div>
+                        </a>
+                        <p><em>render of diamond plate</em></p>
+                    </div>
+                    <div class="col" id="half">
+                        <a href="https://en.wikipedia.org/wiki/Physically_based_rendering">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/Physically_Based_Rendering_Sample_1.png"/>
+                        </div>
+                        </a>
+                        <p><em>render of bricks</em></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col" id="half">
+                        <a href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/Recursive_raytrace_of_a_sphere.png"/>
+                        </div>
+                        </a>
+                        <p><em>raytraced render of a sphere</em></p>
+                    </div>
+                    <div class="col" id="half">
+                        <a href="https://en.wikipedia.org/wiki/Ray_tracing_(graphics)">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/Ray-traced_steel_balls.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>raytraced render of steel balls</em></p>
+                    </div>
+                </div>
             </div>
+        </div>
+        <div class="row" id="title">
+            <p>Unused tile textures from an earlier revision of this scene</p>
+        </div>
+        <div class="row"> 
+            <div class="col" id="oneQuarter">
+                <img crossorigin="" src="./images/tiles-3/Tiles122_4K-JPG_Color.jpg"/>
+                <p><em>albedo</em></p>
+            </div>
+            <div class="col" id="oneQuarter">
+                <img crossorigin="" src="./images/tiles-3/Tiles122_4K-JPG_NormalGL.jpg"/>
+                <p><em>normal vectors</em></p>
+            </div>
+            <div class="col" id="oneQuarter">
+                <img crossorigin="" src="./images/tiles-3/Tiles122_4K-JPG_Roughness.jpg"/>
+                <p><em>roughness</em></p>
+            </div>
+            <div class="col" id="oneQuarter">
+                <img crossorigin="" src="./images/tiles-3/Tiles122_4K-JPG_AmbientOcclusion.jpg"/>
+                <p><em>ambient occlusion</em></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" id="half">
+                <div class="row">
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig01-01.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 1-1</em></p>
+                    </div>
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig01-02.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 1-2</em></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig01-03.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 1-3</em></p>
+                    </div>
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-1-effective-water-simulation-physical-models">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig01-04.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 1-4</em></p>
+                    </div>
+                </div>
+            </div>
+            <div class="col" id="half">
+                <h1>Chapter 1. Effective Water Simulation from Physical Models</h1>
+                <p>
+                This chapter describes a system for simulating and rendering large 
+                bodies of water on the GPU. The system combines geometric undulations 
+                of a base mesh with generation of a dynamic normal map. The system has 
+                proven suitable for real-time game scenarios, having been used 
+                extensively in Cyan Worlds' Uru: Ages Beyond Myst, as shown in 
+                Figure 1-1.
+                </p>
+                <h2>1.1 Goals and Scope</h2>
+                <p>
+                Real-time rendering techniques have been migrating from the 
+                offline-rendering world over the last few years. Fast Fourier 
+                Transform (FFT) techniques, as outlined in Tessendorf 2001, produce 
+                incredible realism for sufficiently large sampling grids, and 
+                moderate-size grids may be processed in real time on consumer-level 
+                PCs. Voxel-based solutions to simplified forms of the Navier-Stokes 
+                equations are also viable (Yann 2003). Although we have not yet 
+                reached the point of cutting-edge, offline fluid simulations, as in 
+                Enright et al. 2002, the gap is closing. By the time this chapter is 
+                published, FFT libraries will likely be available for vertex and 
+                pixel shaders, but as of this writing, even real-time versions of 
+                these techniques are limited to implementation on the CPU.
+                <br><br>
+                At the same time, water simulation models simple enough to run on 
+                the GPU have been evolving upward as well. Isidoro et al. 2002 
+                describes summing four sine waves in a vertex shader to compute 
+                surface height and orientation. Laeuchli 2002 presents a shader 
+                calculating surface height using three Gerstner waves. We start 
+                with summing simple sine functions, then progress to slightly more 
+                complicated functions, as appropriate. We also extend the technique 
+                into the realm of pixel shaders, using a sum of periodic wave 
+                functions to create a dynamic tiling bump map to capture the finer 
+                details of the water surface.
+                <br><br>
+                This chapter focuses on explaining the physical significance of the 
+                system parameters, showing that approximating a water surface with 
+                a sum of sine waves is not as ad hoc as often presented. We pay 
+                special attention to the math that takes us from the underlying 
+                model to the actual implementation; the math is key to extending the 
+                implementation. This system is designed for bodies of water ranging 
+                from a small pond to the ocean as viewed from a cove or island. 
+                Although not a rigorous physical simulation, it does deliver 
+                convincing, flexible, and dynamic renderings of water. Because the 
+                simulation runs entirely on the GPU, it entails no struggle over 
+                CPU usage with either artificial intelligence (AI) or physics 
+                processes. Because the system parameters do have a physical basis, 
+                they are easier to script than if they were found by trial and 
+                error. Making the system as a whole dynamic—in addition to its 
+                component waves—adds an extra level of life.
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" id="half">
+                <h1>Chapter 2. Rendering Water Caustics</h1>
+                <h2>2.1 Introduction</h2>
+                <p>
+                There is something hypnotic about the way water interacts with 
+                light: the subtle reflections and refractions, the way light bends 
+                to form dancing caustics on the bottom of the sea, and the infinitely 
+                varied look of the ocean surface. See Figure 2-1. These phenomena and 
+                their complexity have attracted many researchers from the fields of 
+                physics and, in recent years, computer graphics. Simulating and rendering 
+                realistic water is, like simulating fire, a fascinating task. It is not 
+                easy to achieve good results at interactive frame rates, and thus creative 
+                approaches must often be taken.
+                <br><br>
+                Caustics result from light rays reflecting or refracting from a curved surface 
+                and hence focusing only in certain areas of the receiving surface. This chapter 
+                explains an aesthetics-driven method for rendering underwater caustics in real time. 
+                Our purely aesthetics-driven approach simply leaves realism out of consideration. 
+                The result is a scene that looks good, but may not correctly simulate the physics
+                of the setting. As we show in this chapter, the results of our approach look
+                remarkably realistic, and the method can be implemented easily on most graphics 
+                hardware. This simplified approach has proven very successful in many fractal-related 
+                disciplines, such as mountain and cloud rendering or tree modeling. The purpose 
+                of this chapter is to expose a new technique for rendering real-time 
+                caustics, describing the method from its physical foundations to its 
+                implementation details. Because the technique is procedural, it yields 
+                elegantly to an implementation using a high-level shading language.
+                <br><br>
+                <em>this and previous section taken from the first edition of GPU Gems</em>
+                </p>
+            </div>
+            <div class="col" id="half">
+                <div class="row">
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-2-rendering-water-caustics">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig02-01a.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 2-1</em></p>
+                    </div>
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-2-rendering-water-caustics">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig02-02.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 2-2</em></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-2-rendering-water-caustics">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig02-03.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 2-3</em></p>
+                    </div>
+                    <div class="col" id="half">
+                        <a href="https://developer.nvidia.com/gpugems/gpugems/part-i-natural-effects/chapter-2-rendering-water-caustics">
+                        <div class="mouseoverWiggle" data-vs-id="wiggle-vs" data-fs-id="simple-fs">
+                            <img crossorigin="" src="./images/fig02-06a.jpg"/>
+                        </div>
+                        </a>
+                        <p><em>figure 2-6</em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="row" id="foot">
+            <p>created by <em>gwendolyn morgan solberg</em></p>
         </div>
     </div>
 </body>
