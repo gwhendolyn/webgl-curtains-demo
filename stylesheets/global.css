@@ -25,6 +25,10 @@ em{
     z-index: 1;
     pointer-events: none;
 }
+#canvas canvas{
+    width: 100%;
+    height: 100%;
+}
 .slide{
     scroll-snap-align: center;
     display:flex;
@@ -141,8 +145,9 @@ em{
 }
 .water{
     position:absolute;
+    top:2.5%;
     width:100%;
-    height:90em;
+    aspect-ratio: 1.6/1;
     pointer-events: none;
 }
 .introImgContainer{
@@ -185,7 +190,7 @@ em{
 .caustics{
     position:absolute;
     width:100%;
-    height: 86%;
+    height: 84%;
     bottom: 0;
 }
 .caustics img{
@@ -211,7 +216,7 @@ em{
 }
 .row{
     width:95%;
-    max-width: 1600px;
+    max-width: 1500px;
     display: flex;
     flex-direction: row;
     margin:0 auto;

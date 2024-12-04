@@ -39,7 +39,6 @@ window.addEventListener("load", () => {
     const curtainCanvas = document.getElementById("canvas");
     const curtains = new Curtains({
         container: "canvas",
-        pixelRatio: 1.0,
     });
     const loader = new TextureLoader(curtains);
 
@@ -310,14 +309,15 @@ window.addEventListener("load", () => {
         }).onRender(() => {
             // use damping
             if(wigglerPlane.userData.mouseOver) {
-                wigglerPlane.uniforms.time.value += (45 - wigglerPlane.uniforms.time.value) * 0.0375;
+                wigglerPlane.uniforms.time.value += (45 - wigglerPlane.uniforms.time.value) * 0.05;
             }
             else {
-                wigglerPlane.uniforms.time.value += (0 - wigglerPlane.uniforms.time.value) * 0.0375;
+                wigglerPlane.uniforms.time.value += (0 - wigglerPlane.uniforms.time.value) * 0.05;
             }
         });
     }
     //#endregion
+    
     //add resize listener to update resolution uniforms
     window.addEventListener("resize", () => {
         asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
