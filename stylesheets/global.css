@@ -230,6 +230,7 @@ em{
     margin:auto;
 }
 .col{
+    user-select: none;
     display: flex;
     flex-direction: column;
     margin:0;
@@ -271,7 +272,8 @@ em{
     margin:auto;
 }
 .mouseoverWiggle{
-    cursor: pointer;
+    cursor: grab;
+    -webkit-user-drag: element;
 }
 .mouseoverWiggle img{
     visibility: hidden;

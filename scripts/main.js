@@ -81,8 +81,8 @@ window.addEventListener("load", () => {
         });
         fractalBg.addEventListener("mousemove", (event) => {
             var rect = fractalBg.getBoundingClientRect();
-            bgPlane.uniforms.mouse.value.x = curtains.lerp(bgPlane.uniforms.mouse.value.x,event.clientX - rect.left,0.1);
-            bgPlane.uniforms.mouse.value.y = curtains.lerp(bgPlane.uniforms.mouse.value.y,event.clientY - rect.top,0.1);
+            bgPlane.uniforms.mouse.value.x = curtains.lerp(bgPlane.uniforms.mouse.value.x,event.clientX - rect.left,0.3);
+            bgPlane.uniforms.mouse.value.y = curtains.lerp(bgPlane.uniforms.mouse.value.y,event.clientY - rect.top,0.3);
         });
         bgPlane.onAfterResize(() => {
             bgPlane.uniforms.resolution.value.x = fractalBg.offsetWidth;
@@ -238,7 +238,7 @@ window.addEventListener("load", () => {
     //#endregion
     
     //#region --water demo--
-    const lightVector = new Vec3(-0.1,-1.5,0.8);
+    const lightVector = new Vec3(0.0,-1.5,0.8);
     const caustics = document.getElementsByClassName("caustics")[0];
     const causticParams = {
         renderOrder:1,
@@ -254,6 +254,7 @@ window.addEventListener("load", () => {
     causticPlane.onRender(() => {causticPlane.uniforms.time.value++;});
 
     const water = document.getElementsByClassName("water")[0];
+    const container = document.getElementById("big");
     const waterParams = {
         renderOrder:2,
         widthSegments:200,
@@ -278,26 +279,41 @@ window.addEventListener("load", () => {
         waterPlane.scale.x = 1.8;
         waterPlane.scale.y = 1.2;
     });
+    var mouseXY = [0.0,0.0];
+    var mouseHome = [0.0,0.0];
+    container.addEventListener("mousemove", (event) => {
+        waterPlane.uniforms.light.value.x = -((event.clientX/water.offsetWidth)-0.5);
+        mouseXY[0] = event.clientX;
+        mouseXY[1] = event.clientY;
+    });
     waterPlane.onRender(() => {waterPlane.uniforms.time.value+=1;});
     //#endregion
 
     //#region --water buttons--
     const wigglers = document.getElementsByClassName("mouseoverWiggle");
     const wigglerParams = {
-        widthSegments:50,
+        widthSegments:20,
+        heightSegments:20,
         uniforms:{
             time:{
                 name: "uTime",
                 type: "1f",
                 value: 0.0
+            },
+            drag:{
+                name: "uDrag",
+                type: "2f",
+                value: new Vec2(0.0,0.0)
             }
         }
     }
+    var wigglerPlanes = [];
     for (const wiggler of wigglers){
         const wigglerPlane = new Plane(curtains, wiggler, wigglerParams);
+        wigglerPlanes.push(wigglerPlane);
         wigglerPlane.onReady(() => {
             wigglerPlane.userData.mouseOver = false;
-            
+            wigglerPlane.userData.beingDragged = false;
             wiggler.addEventListener("mouseover", () => {
                 wigglerPlane.userData.mouseOver = true;
             });
@@ -306,14 +322,29 @@ window.addEventListener("load", () => {
                 wigglerPlane.userData.mouseOver = false;
             });
 
+            wiggler.addEventListener("mousedown", (event) => {
+                wigglerPlane.userData.beingDragged = true;
+                mouseHome = [event.clientX, event.clientY];
+            });
+
         }).onRender(() => {
-            // use damping
-            if(wigglerPlane.userData.mouseOver) {
-                wigglerPlane.uniforms.time.value += (45 - wigglerPlane.uniforms.time.value) * 0.05;
-            }
-            else {
-                wigglerPlane.uniforms.time.value += (0 - wigglerPlane.uniforms.time.value) * 0.05;
-            }
+            if(wigglerPlane.userData.beingDragged){
+                wigglerPlane.uniforms.drag.value.x = -(mouseXY[0] - mouseHome[0]);
+                wigglerPlane.uniforms.drag.value.y = -(mouseXY[1] - mouseHome[1]);
+                wigglerPlane.relativeTranslation.x = mouseXY[0] - mouseHome[0]; 
+                wigglerPlane.relativeTranslation.y = mouseXY[1] - mouseHome[1];
+            }else{
+                wigglerPlane.relativeTranslation.x += (0 - wigglerPlane.relativeTranslation.x) * 0.05;
+                wigglerPlane.relativeTranslation.y += (0 - wigglerPlane.relativeTranslation.y) * 0.05;
+                wigglerPlane.uniforms.drag.value.x += (0 - wigglerPlane.uniforms.drag.value.x) * 0.05;
+                wigglerPlane.uniforms.drag.value.y += (0 - wigglerPlane.uniforms.drag.value.y) * 0.05;
+                if(wigglerPlane.userData.mouseOver) {
+                    wigglerPlane.uniforms.time.value += (45 - wigglerPlane.uniforms.time.value) * 0.05;
+                }
+                else {
+                    wigglerPlane.uniforms.time.value += (0 - wigglerPlane.uniforms.time.value) * 0.05;
+                } 
+            } 
         });
     }
     //#endregion
@@ -322,5 +353,10 @@ window.addEventListener("load", () => {
     window.addEventListener("resize", () => {
         asciiPass.uniforms.resolution.value.x = curtainCanvas.offsetWidth;
         asciiPass.uniforms.resolution.value.y = curtainCanvas.offsetHeight;
+    });
+    window.addEventListener("mouseup", () => {
+        for(const wp of wigglerPlanes){
+            wp.userData.beingDragged = false;
+        }
     });
 });
