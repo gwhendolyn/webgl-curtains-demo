@@ -334,10 +334,10 @@ window.addEventListener("load", () => {
                 wigglerPlane.relativeTranslation.x = mouseXY[0] - mouseHome[0]; 
                 wigglerPlane.relativeTranslation.y = mouseXY[1] - mouseHome[1];
             }else{
-                wigglerPlane.relativeTranslation.x += (0 - wigglerPlane.relativeTranslation.x) * 0.05;
-                wigglerPlane.relativeTranslation.y += (0 - wigglerPlane.relativeTranslation.y) * 0.05;
-                wigglerPlane.uniforms.drag.value.x += (0 - wigglerPlane.uniforms.drag.value.x) * 0.05;
-                wigglerPlane.uniforms.drag.value.y += (0 - wigglerPlane.uniforms.drag.value.y) * 0.05;
+                wigglerPlane.relativeTranslation.x += (0 - wigglerPlane.relativeTranslation.x) * 0.08;
+                wigglerPlane.relativeTranslation.y += (0 - wigglerPlane.relativeTranslation.y) * 0.08;
+                wigglerPlane.uniforms.drag.value.x += (0 - wigglerPlane.uniforms.drag.value.x) * 0.08;
+                wigglerPlane.uniforms.drag.value.y += (0 - wigglerPlane.uniforms.drag.value.y) * 0.08;
                 if(wigglerPlane.userData.mouseOver) {
                     wigglerPlane.uniforms.time.value += (45 - wigglerPlane.uniforms.time.value) * 0.05;
                 }
